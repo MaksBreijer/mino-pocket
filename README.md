@@ -61,4 +61,4 @@ Het Supabase-project **Minor Pocket** (organisatie Minor ondernemerschap HVA, `f
 
 ## Live zetten
 
-Elke merge naar `main` zet `dist/` automatisch live op Cloudflare Pages (project `minorondernemerschaphva`, account "minorondernemeschap HVA") via `.github/workflows/deploy.yml`. Daarvoor moet in GitHub onder Settings → Secrets and variables → Actions het secret `CLOUDFLARE_API_TOKEN` staan: een Cloudflare API-token met het recht *Cloudflare Pages: Edit*. Handmatig opnieuw uitrollen kan via Actions → Deploy naar Cloudflare Pages → Run workflow.
+De site staat op **https://lively-voice-78a8.makscoolbreijer.workers.dev** (Cloudflare Worker `lively-voice-78a8`, statische bestanden uit `dist/`, zie `wrangler.jsonc`). Elke merge naar `main` zet hem automatisch live via `.github/workflows/deploy.yml`. Daarvoor moet in GitHub onder Settings → Secrets and variables → Actions het secret `CLOUDFLARE_API_TOKEN` staan: een Cloudflare API-token (sjabloon *Edit Cloudflare Workers*) van het account waar de Worker in staat. Handmatig opnieuw uitrollen kan via Actions → Deploy naar Cloudflare → Run workflow.

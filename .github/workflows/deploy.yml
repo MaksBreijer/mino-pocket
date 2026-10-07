@@ -1,6 +1,7 @@
-# Zet de site bij elke wijziging op main live op Cloudflare Pages
-# (account "minorondernemeschap HVA", project minorondernemerschaphva).
-name: Deploy naar Cloudflare Pages
+# Zet de site bij elke wijziging op main live als Cloudflare Worker
+# (lively-voice-78a8.makscoolbreijer.workers.dev, instellingen in wrangler.jsonc).
+# Het account volgt uit het token in het secret CLOUDFLARE_API_TOKEN.
+name: Deploy naar Cloudflare
 
 on:
   push:
@@ -16,12 +17,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      deployments: write
     steps:
       - uses: actions/checkout@v4
       - uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: 25edb8c0b391059e9b6a083ce2872127
-          workingDirectory: dist
-          command: pages deploy . --project-name=minorondernemerschaphva --branch=main --commit-dirty=true
+          command: deploy
