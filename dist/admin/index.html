@@ -1,1 +1,304 @@
-<!doctype html><meta http-equiv="refresh" content="0;url=/admin.html"><title>Adminportaal</title>
+<!doctype html><html lang="nl"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Admin · Minor Pocket</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+:root{--o:#ff6b35;--i:#1b1820;--l:#ecd8ce}*{box-sizing:border-box}body{margin:0;background:#f8f5f3;font:17px Arial;color:var(--i)}.bar{background:var(--i);color:#fff;padding:18px max(20px,calc((100% - 1080px)/2));display:flex;justify-content:space-between;align-items:center;gap:12px}.bar small{font-weight:normal;color:#cdc7c5}.bar button{background:none;border:1px solid #fff5;color:#fff;border-radius:8px;padding:9px 12px;font:inherit;cursor:pointer}.wrap{max-width:1080px;margin:auto;padding:24px}.eyebrow{color:#6f6560;font-size:.8rem;font-weight:bold;letter-spacing:.1em}.card{background:#fff;border:1px solid var(--l);border-radius:15px;padding:20px;margin:16px 0}.card h2{margin-top:0}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}label{display:block;font-weight:bold;margin-top:9px}input,select,textarea{width:100%;padding:13px;border:1px solid #dcbeb0;border-radius:8px;margin:7px 0 13px;font:inherit}.button{background:var(--o);color:#fff;border:0;border-radius:8px;padding:13px 16px;font-weight:bold;font-size:1rem;cursor:pointer}.button.ghost{background:#fff;color:var(--i);border:1px solid var(--l)}.result{background:#fff0e8;padding:12px;border-radius:8px}.row{padding:12px 0;border-top:1px solid var(--l);display:flex;justify-content:space-between;gap:12px;align-items:center}.row small{display:block;color:#6f6560}.row button{background:none;border:1px solid var(--l);border-radius:8px;padding:8px 10px;cursor:pointer;font:inherit}.tabs{display:flex;gap:8px;margin:14px 0;flex-wrap:wrap}.tab{background:#fff;border:1px solid var(--l);padding:11px 14px;border-radius:8px;cursor:pointer;font:inherit}.tab.active{border-color:var(--o);background:#fff0e8}.gate{min-height:100vh;display:grid;place-items:center;background:var(--i);padding:16px}.gate main{width:min(100%,480px);background:#fff;border-radius:22px;padding:30px}.gate h1{margin:6px 0}.code{font:bold 2rem monospace;letter-spacing:.2em;text-align:center;padding:16px;background:#fff0e8;border-radius:12px}.nav{display:flex;gap:8px;flex-wrap:wrap;position:sticky;top:0;background:#f8f5f3;padding:10px 0;z-index:1}.nav a{padding:10px 13px;border:1px solid var(--l);border-radius:20px;background:#fff;color:var(--i);text-decoration:none;font-size:.9rem}[hidden]{display:none!important}@media(max-width:700px){.grid{grid-template-columns:1fr}.wrap{padding:16px}}
+</style>
+<body>
+<div class="gate" id="loginGate" hidden><main><p class="eyebrow">MINOR POCKET · ADMIN</p><h1>Beheeromgeving</h1><p>Alleen voor admins, op de gekoppelde admin-tablet.</p>
+<form id="loginForm"><label for="mail">E-mailadres</label><input id="mail" type="email" autocomplete="email" required><label for="password">Wachtwoord</label><input id="password" type="password" autocomplete="current-password" required><button class="button" style="width:100%">Inloggen</button></form>
+<p><button class="tab" id="toSignup" type="button">Nog geen wachtwoord? Account aanmaken</button></p><p id="loginError" class="result" hidden></p></main></div>
+
+<div class="gate" id="pairGate" hidden><main><p class="eyebrow">MINOR POCKET · ADMIN</p><h1>Tablet koppelen</h1><p>Dit apparaat is nog niet gekoppeld als admin-tablet. Vul een koppelcode in. Die maak je op een al gekoppelde tablet (onderdeel Apparaten). Voor de allereerste tablet maak je de code in de Supabase SQL-editor met <code>select public.admin_bootstrap_code();</code></p>
+<form id="pairForm"><label for="pairCode">Koppelcode</label><input id="pairCode" autocomplete="off" autocapitalize="characters" required><label for="deviceName">Naam van dit apparaat</label><input id="deviceName" value="Admin-tablet" required><button class="button" style="width:100%">Deze tablet koppelen</button></form>
+<p id="pairError" class="result" hidden></p><p><button class="tab" id="pairLogout" type="button">Uitloggen</button></p></main></div>
+
+<div id="app" hidden><header class="bar"><b>Minor Pocket · Admin <small id="who"></small></b><button id="logout">Uitloggen</button></header><main class="wrap"><p class="eyebrow">ADMINPORTAAL · MINOREN, KOPPELINGEN EN ROOSTER</p><h1>Beheeromgeving</h1>
+<nav class="nav"><a href="#s-period">Periode</a><a href="#s-people">Personen</a><a href="#s-companies">Ondernemingen</a><a href="#s-coach">Coaches</a><a href="#s-assess">Assessments</a><a href="#s-schedule">Rooster</a><a href="#s-devices">Apparaten</a></nav>
+
+<section class="card" id="s-period"><h2>Werk in een minorperiode</h2><p>Kies de periode waarvoor je teams, personen en rooster beheert. De actieve periode is wat studenten en coaches zien.</p><select id="period"></select><div class="grid"><button class="button ghost" id="makeCurrent">Maak deze periode actief</button><form id="periodForm" style="display:flex;gap:8px"><input id="periodName" placeholder="Nieuwe periode, bijv. Minor 43 · halfjaar 1" required style="margin:0"><button class="button">Toevoegen</button></form></div></section>
+
+<section class="card" id="s-people"><h2>Personen uitnodigen</h2><p>Alleen uitgenodigde e-mailadressen kunnen een account aanmaken. Importeer een klas als CSV of Excel met de kolommen <b>email</b>, <b>naam</b>, <b>rol</b> (student/coach/admin) en optioneel <b>onderneming</b>. Ondernemingen worden aangemaakt in de gekozen periode.</p>
+<input id="file" type="file" accept=".csv,.xlsx,.xls"><button class="button" id="importBtn">Importeer bestand</button><p id="importResult" class="result" hidden></p>
+<form id="inviteForm" class="grid" style="margin-top:12px"><div><label for="invEmail">E-mailadres</label><input id="invEmail" type="email" required></div><div><label for="invName">Naam</label><input id="invName"></div><div><label for="invRole">Rol</label><select id="invRole"><option value="student">Student</option><option value="coach">Coach</option><option value="admin">Admin</option></select></div><div style="align-self:end"><button class="button">Uitnodigen</button></div></form><div id="people"></div></section>
+
+<section class="card" id="s-companies"><h2>Ondernemingen</h2><form id="companyForm" style="display:flex;gap:8px"><input id="companyName" placeholder="Naam onderneming" required style="margin:0"><button class="button">Toevoegen</button></form>
+<div class="grid" style="margin-top:12px"><div><label for="memberCompany">Student toevoegen aan</label><select id="memberCompany"></select></div><div><label for="memberEmail">Student</label><select id="memberEmail"></select></div></div><button class="button ghost" id="addMember">Student koppelen</button><div id="companies"></div></section>
+
+<section class="card" id="s-coach"><h2>Coach koppelen</h2><div class="tabs"><button class="tab active" id="teamTab">Aan team</button><button class="tab" id="personTab">Aan persoon</button></div><p id="modeText">Koppel een coach aan een hele onderneming.</p><div class="grid"><div><label id="subjectLabel" for="subject">Onderneming</label><select id="subject"></select></div><div><label for="coach">Coach</label><select id="coach"></select></div></div><button class="button" id="assignBtn">Koppeling opslaan</button><p id="assignResult" class="result" hidden></p><h3>Koppelingen in deze periode</h3><div id="assigned"></div></section>
+
+<section class="card" id="s-assess"><h2>Assessments</h2><form id="assessForm"><div class="grid"><div><label for="aTitle">Titel</label><input id="aTitle" required></div><div><label for="aDue">Deadline</label><input id="aDue" type="datetime-local"></div></div><label for="aDesc">Wat maakt de student?</label><textarea id="aDesc"></textarea><label for="aHint">Bestandstype</label><input id="aHint" placeholder="Bijv. PDF of PowerPoint"><button class="button">Assessment opslaan</button></form><div id="assessments"></div></section>
+
+<section class="card" id="s-schedule"><h2>Schoolrooster aanpassen</h2><p>Voeg lesmomenten, workshops of coachmomenten toe voor de gekozen periode.</p><form id="eventForm"><div class="grid"><div><label for="date">Datum</label><input id="date" type="date" required><label for="time">Tijd</label><input id="time" type="time" required></div><div><label for="event">Activiteit</label><input id="event" placeholder="Bijv. Werkcollege Validatie" required><label for="location">Locatie</label><input id="location" placeholder="Bijv. M.1.23"></div></div><button class="button">Roostermoment opslaan</button></form><div id="schedule"></div></section>
+
+<section class="card" id="s-devices"><h2>Apparaten</h2><p>Alleen deze apparaten geven toegang tot de beheeromgeving. Maak een koppelcode om een extra tablet toe te voegen; de code is 15 minuten geldig.</p><button class="button" id="newCode">Nieuwe koppelcode</button><div id="codeBox" hidden><p class="code" id="code"></p></div><div id="devices"></div></section>
+</main></div>
+
+<script type="module">
+import { supabase, currentProfile, deviceToken, setDeviceToken, esc, formatDate, message } from '../js/supabase.js';
+const $ = (s) => document.querySelector(s);
+const show = (el, text) => { el.hidden = !text; el.textContent = text || ''; };
+let me, periods = [], mode = 'team', signup = false;
+
+async function start() {
+  ['#loginGate', '#pairGate', '#app'].forEach((s) => $(s).hidden = true);
+  me = await currentProfile();
+  if (!me) return $('#loginGate').hidden = false;
+  if (me.role !== 'admin') {
+    await supabase.auth.signOut();
+    $('#loginGate').hidden = false;
+    return show($('#loginError'), 'Dit account heeft geen admin-rechten.');
+  }
+  const trusted = deviceToken() && (await supabase.rpc('touch_admin_device')).data === true;
+  if (!trusted) return $('#pairGate').hidden = false;
+  $('#who').textContent = '· ' + (me.full_name || me.email);
+  $('#app').hidden = false;
+  await loadPeriods();
+}
+
+// ------------------------------------------------------------ inloggen en koppelen
+$('#toSignup').onclick = () => {
+  signup = !signup;
+  $('#toSignup').textContent = signup ? 'Ik heb al een account' : 'Nog geen wachtwoord? Account aanmaken';
+  $('#loginForm button').textContent = signup ? 'Account aanmaken' : 'Inloggen';
+};
+$('#loginForm').onsubmit = async (e) => {
+  e.preventDefault();
+  const credentials = { email: $('#mail').value.trim().toLowerCase(), password: $('#password').value };
+  const { data, error } = signup ? await supabase.auth.signUp(credentials) : await supabase.auth.signInWithPassword(credentials);
+  if (error) return show($('#loginError'), message(error));
+  if (!data.session) return show($('#loginError'), 'Bevestig eerst je account via de e-mail die je net hebt gekregen.');
+  show($('#loginError'), '');
+  start();
+};
+$('#pairForm').onsubmit = async (e) => {
+  e.preventDefault();
+  const { data, error } = await supabase.rpc('pair_admin_device', { p_code: $('#pairCode').value, p_name: $('#deviceName').value });
+  if (error) return show($('#pairError'), message(error));
+  setDeviceToken(data);
+  location.reload();
+};
+const signOut = async () => { await supabase.auth.signOut(); location.reload(); };
+$('#pairLogout').onclick = signOut;
+$('#logout').onclick = signOut;
+
+// ------------------------------------------------------------ periode
+const periodId = () => $('#period').value;
+async function loadPeriods() {
+  const { data } = await supabase.from('periods').select('*').order('name');
+  periods = data;
+  const keep = periodId() || periods.find((p) => p.is_current)?.id;
+  $('#period').innerHTML = periods.map((p) => `<option value="${p.id}">${esc(p.name)}${p.is_current ? ' (actief)' : ''}</option>`).join('');
+  if (keep) $('#period').value = keep;
+  await renderAll();
+}
+$('#period').onchange = renderAll;
+$('#makeCurrent').onclick = async () => {
+  await supabase.from('periods').update({ is_current: false }).eq('is_current', true);
+  const { error } = await supabase.from('periods').update({ is_current: true }).eq('id', periodId());
+  if (error) alert(message(error));
+  loadPeriods();
+};
+$('#periodForm').onsubmit = async (e) => {
+  e.preventDefault();
+  const { error } = await supabase.from('periods').insert({ name: $('#periodName').value.trim() });
+  if (error) return alert(message(error));
+  e.target.reset();
+  loadPeriods();
+};
+
+async function renderAll() {
+  if (!periodId()) return;
+  await renderPeople();
+  await Promise.all([renderCompanies(), renderAssessments(), renderSchedule(), renderDevices()]);
+  await renderCoach();
+}
+
+// ------------------------------------------------------------ personen
+let invites = [], profiles = [];
+async function renderPeople() {
+  [{ data: invites }, { data: profiles }] = await Promise.all([
+    supabase.from('invites').select('*').order('role').order('email'),
+    supabase.from('profiles').select('*'),
+  ]);
+  const roles = { student: 'Student', coach: 'Coach', admin: 'Admin' };
+  $('#people').innerHTML = `<h3>${invites.length} uitgenodigd</h3>` + invites.map((i) => {
+    const account = profiles.find((p) => p.email === i.email);
+    return `<div class="row"><span><b>${esc(i.full_name || i.email)}</b><small>${roles[i.role]} · ${esc(i.email)} · ${account ? 'account actief' : 'nog geen account'}</small></span><button data-del-invite="${esc(i.email)}">Verwijderen</button></div>`;
+  }).join('');
+  document.querySelectorAll('[data-del-invite]').forEach((b) => b.onclick = async () => {
+    if (!confirm('Uitnodiging intrekken? Een bestaand account blijft bestaan.')) return;
+    await supabase.from('invites').delete().eq('email', b.dataset.delInvite);
+    renderPeople();
+  });
+  const students = invites.filter((i) => i.role === 'student'), coaches = invites.filter((i) => i.role === 'coach');
+  $('#memberEmail').innerHTML = students.map((s) => `<option value="${esc(s.email)}">${esc(s.full_name || s.email)}</option>`).join('');
+  $('#coach').innerHTML = coaches.map((c) => `<option value="${esc(c.email)}">${esc(c.full_name || c.email)} · ${esc(c.email)}</option>`).join('');
+}
+
+$('#inviteForm').onsubmit = async (e) => {
+  e.preventDefault();
+  const { error } = await supabase.from('invites').upsert({ email: $('#invEmail').value.trim().toLowerCase(), full_name: $('#invName').value.trim() || null, role: $('#invRole').value });
+  if (error) return alert(message(error));
+  e.target.reset();
+  renderAll();
+};
+
+$('#importBtn').onclick = async () => {
+  const file = $('#file').files[0];
+  if (!file) return alert('Kies eerst een CSV- of Excel-bestand.');
+  const book = XLSX.read(await file.arrayBuffer());
+  const rows = XLSX.utils.sheet_to_json(book.Sheets[book.SheetNames[0]], { defval: '' });
+  const pick = (row, ...keys) => {
+    const key = Object.keys(row).find((k) => keys.includes(k.trim().toLowerCase()));
+    return key ? String(row[key]).trim() : '';
+  };
+  const people = rows.map((r) => ({
+    email: pick(r, 'email', 'e-mail', 'e-mailadres', 'mail').toLowerCase(),
+    full_name: pick(r, 'naam', 'name', 'volledige naam') || null,
+    role: (pick(r, 'rol', 'role') || 'student').toLowerCase(),
+    company: pick(r, 'onderneming', 'bedrijf', 'team', 'company'),
+  })).filter((p) => p.email.includes('@'));
+  const bad = people.filter((p) => !['student', 'coach', 'admin'].includes(p.role));
+  if (!people.length) return show($('#importResult'), 'Geen regels met een e-mailadres gevonden. Controleer de kolomnamen.');
+  if (bad.length) return show($('#importResult'), `Onbekende rol bij ${bad[0].email}: "${bad[0].role}". Gebruik student, coach of admin.`);
+
+  let { error } = await supabase.from('invites').upsert(people.map(({ email, full_name, role }) => ({ email, full_name, role })));
+  const names = [...new Set(people.map((p) => p.company).filter(Boolean))];
+  if (!error && names.length) {
+    ({ error } = await supabase.from('companies').upsert(names.map((name) => ({ period_id: periodId(), name })), { onConflict: 'period_id,name', ignoreDuplicates: true }));
+    if (!error) {
+      const { data: companies } = await supabase.from('companies').select('id, name').eq('period_id', periodId());
+      const members = people.filter((p) => p.company).map((p) => ({ company_id: companies.find((c) => c.name === p.company).id, email: p.email }));
+      ({ error } = await supabase.from('company_members').upsert(members, { ignoreDuplicates: true }));
+    }
+  }
+  show($('#importResult'), error ? 'Import mislukt: ' + message(error) : `${people.length} personen uitgenodigd${names.length ? ` en ${names.length} ondernemingen bijgewerkt` : ''}.`);
+  renderAll();
+};
+
+// ------------------------------------------------------------ ondernemingen
+let companies = [];
+async function renderCompanies() {
+  const { data } = await supabase.from('companies').select('*, company_members(email)').eq('period_id', periodId()).order('name');
+  companies = data;
+  const name = (email) => invites.find((i) => i.email === email)?.full_name || email;
+  $('#memberCompany').innerHTML = companies.map((c) => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
+  $('#companies').innerHTML = companies.length ? companies.map((c) => `<div class="row"><span><b>${esc(c.name)}</b><small>${c.company_members.map((m) => `${esc(name(m.email))} <a href="#" data-remove="${c.id}|${esc(m.email)}">×</a>`).join(' · ') || 'Nog geen studenten'}</small></span><button data-del-company="${c.id}">Verwijderen</button></div>`).join('') : '<p>Nog geen ondernemingen in deze periode.</p>';
+  document.querySelectorAll('[data-del-company]').forEach((b) => b.onclick = async () => {
+    if (!confirm('Onderneming verwijderen, inclusief koppelingen en teamfeedback?')) return;
+    await supabase.from('companies').delete().eq('id', b.dataset.delCompany);
+    renderAll();
+  });
+  document.querySelectorAll('[data-remove]').forEach((a) => a.onclick = async (e) => {
+    e.preventDefault();
+    const [company_id, email] = a.dataset.remove.split('|');
+    await supabase.from('company_members').delete().match({ company_id, email });
+    renderCompanies();
+  });
+}
+$('#companyForm').onsubmit = async (e) => {
+  e.preventDefault();
+  const { error } = await supabase.from('companies').insert({ period_id: periodId(), name: $('#companyName').value.trim() });
+  if (error) return alert(message(error));
+  e.target.reset();
+  renderAll();
+};
+$('#addMember').onclick = async () => {
+  if (!$('#memberCompany').value || !$('#memberEmail').value) return;
+  const { error } = await supabase.from('company_members').upsert({ company_id: $('#memberCompany').value, email: $('#memberEmail').value }, { ignoreDuplicates: true });
+  if (error) return alert(message(error));
+  renderAll();
+};
+
+// ------------------------------------------------------------ coaches
+function setMode(m) {
+  mode = m;
+  $('#teamTab').classList.toggle('active', m === 'team');
+  $('#personTab').classList.toggle('active', m === 'person');
+  $('#subjectLabel').textContent = m === 'team' ? 'Onderneming' : 'Student';
+  $('#modeText').textContent = m === 'team' ? 'Koppel een coach aan een hele onderneming.' : 'Koppel een coach voor persoonlijke begeleiding van één student.';
+  renderCoach();
+}
+$('#teamTab').onclick = () => setMode('team');
+$('#personTab').onclick = () => setMode('person');
+
+async function renderCoach() {
+  $('#subject').innerHTML = mode === 'team'
+    ? companies.map((c) => `<option value="${c.id}">${esc(c.name)}</option>`).join('')
+    : invites.filter((i) => i.role === 'student').map((s) => `<option value="${esc(s.email)}">${esc(s.full_name || s.email)}</option>`).join('');
+  const { data } = await supabase.from('coach_assignments').select('*, companies(name)').eq('period_id', periodId());
+  const name = (email) => invites.find((i) => i.email === email)?.full_name || email;
+  $('#assigned').innerHTML = data.length ? data.map((x) => `<div class="row"><span><b>${esc(x.companies?.name || name(x.student_email))}</b><small>${x.company_id ? 'Teamcoach' : 'Persoonlijke coach'} · ${esc(name(x.coach_email))}</small></span><button data-del-assign="${x.id}">Verwijderen</button></div>`).join('') : '<p>Nog geen koppelingen voor deze periode.</p>';
+  document.querySelectorAll('[data-del-assign]').forEach((b) => b.onclick = async () => {
+    await supabase.from('coach_assignments').delete().eq('id', b.dataset.delAssign);
+    renderCoach();
+  });
+}
+$('#assignBtn').onclick = async () => {
+  if (!$('#subject').value || !$('#coach').value) return show($('#assignResult'), 'Voeg eerst een onderneming/student en een coach toe.');
+  const row = { period_id: periodId(), coach_email: $('#coach').value, company_id: mode === 'team' ? $('#subject').value : null, student_email: mode === 'person' ? $('#subject').value : null };
+  // Eén coach per team of student per periode: bestaande koppeling vervangen.
+  const del = supabase.from('coach_assignments').delete().eq('period_id', row.period_id);
+  await (mode === 'team' ? del.eq('company_id', row.company_id) : del.eq('student_email', row.student_email));
+  const { error } = await supabase.from('coach_assignments').insert(row);
+  show($('#assignResult'), error ? message(error) : `${$('#subject').selectedOptions[0].text} is gekoppeld aan ${$('#coach').selectedOptions[0].text}.`);
+  renderCoach();
+};
+
+// ------------------------------------------------------------ assessments
+async function renderAssessments() {
+  const { data } = await supabase.from('assessments').select('*').eq('period_id', periodId()).order('due_at', { nullsFirst: false });
+  $('#assessments').innerHTML = data.map((a) => `<div class="row"><span><b>${esc(a.title)}</b><small>${a.due_at ? 'Deadline ' + formatDate(a.due_at) : 'Deadline volgt'} · ${esc(a.file_hint || '')}</small></span><button data-del-assess="${a.id}">Verwijderen</button></div>`).join('') || '<p>Nog geen assessments.</p>';
+  document.querySelectorAll('[data-del-assess]').forEach((b) => b.onclick = async () => {
+    if (!confirm('Assessment verwijderen, inclusief inleveringen en feedback?')) return;
+    await supabase.from('assessments').delete().eq('id', b.dataset.delAssess);
+    renderAssessments();
+  });
+}
+$('#assessForm').onsubmit = async (e) => {
+  e.preventDefault();
+  const { error } = await supabase.from('assessments').upsert({
+    period_id: periodId(), title: $('#aTitle').value.trim(), description: $('#aDesc').value.trim() || null,
+    file_hint: $('#aHint').value.trim() || null, due_at: $('#aDue').value ? new Date($('#aDue').value).toISOString() : null,
+  }, { onConflict: 'period_id,title' });
+  if (error) return alert(message(error));
+  e.target.reset();
+  renderAssessments();
+};
+
+// ------------------------------------------------------------ rooster
+async function renderSchedule() {
+  const { data } = await supabase.from('schedule_events').select('*').eq('period_id', periodId()).order('starts_at');
+  $('#schedule').innerHTML = '<h3>Rooster</h3>' + (data.length ? data.map((x) => `<div class="row"><span><b>${formatDate(x.starts_at)} · ${esc(x.title)}</b><small>${esc(x.location || 'Locatie volgt')}</small></span><button data-del-event="${x.id}">Verwijderen</button></div>`).join('') : '<p>Nog geen roostermomenten.</p>');
+  document.querySelectorAll('[data-del-event]').forEach((b) => b.onclick = async () => {
+    await supabase.from('schedule_events').delete().eq('id', b.dataset.delEvent);
+    renderSchedule();
+  });
+}
+$('#eventForm').onsubmit = async (e) => {
+  e.preventDefault();
+  const { error } = await supabase.from('schedule_events').insert({ period_id: periodId(), starts_at: new Date(`${$('#date').value}T${$('#time').value}`).toISOString(), title: $('#event').value.trim(), location: $('#location').value.trim() || null });
+  if (error) return alert(message(error));
+  e.target.reset();
+  renderSchedule();
+};
+
+// ------------------------------------------------------------ apparaten
+async function renderDevices() {
+  const { data } = await supabase.from('admin_devices').select('*').is('revoked_at', null).order('created_at');
+  $('#devices').innerHTML = data.map((d) => `<div class="row"><span><b>${esc(d.name)}</b><small>Gekoppeld ${formatDate(d.created_at)}${d.last_seen_at ? ' · laatst gebruikt ' + formatDate(d.last_seen_at) : ''}</small></span><button data-revoke="${d.id}">Ontkoppelen</button></div>`).join('');
+  document.querySelectorAll('[data-revoke]').forEach((b) => b.onclick = async () => {
+    if (!confirm('Dit apparaat ontkoppelen? Het heeft daarna geen toegang meer tot beheer.')) return;
+    await supabase.from('admin_devices').update({ revoked_at: new Date().toISOString() }).eq('id', b.dataset.revoke);
+    start();
+  });
+}
+$('#newCode').onclick = async () => {
+  const { data, error } = await supabase.rpc('create_pairing_code');
+  if (error) return alert(message(error));
+  $('#code').textContent = data;
+  $('#codeBox').hidden = false;
+};
+
+start();
+</script></body></html>
