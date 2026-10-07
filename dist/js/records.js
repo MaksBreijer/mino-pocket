@@ -7,7 +7,7 @@ const ORDER = ['Startupassessment', 'Startupassessment (pilot)', 'Tussenassessme
 const rank = (s) => (ORDER.indexOf(s) + 1 || 99);
 const day = (d) => new Date(d).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' });
 
-export const RECORD_STYLE = `<style>.rec{border:1px solid #efd9ce;border-radius:12px;margin:8px 0;background:#fff}.rec summary{padding:11px 13px;cursor:pointer;display:flex;justify-content:space-between;gap:10px;align-items:baseline}.rec summary small{color:#6f6560}.rec .grade{font-weight:bold;color:#b9491d;white-space:nowrap}.rec dl{margin:0;padding:0 13px 12px;display:grid;grid-template-columns:minmax(120px,38%) 1fr;gap:6px 12px;font-size:.92rem}.rec dt{color:#6f6560}.rec dd{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}@media(max-width:600px){.rec dl{grid-template-columns:1fr}.rec dd{margin-bottom:6px}}</style>`;
+export const RECORD_STYLE = `<style>.rec{border:1px solid #efd9ce;border-radius:12px;margin:8px 0;background:#fff}.rec summary{padding:11px 13px;cursor:pointer;display:flex;justify-content:space-between;gap:10px;align-items:baseline}.rec summary small{color:#6f6560}.rec .grade{font-weight:bold;color:#b9491d;white-space:nowrap}.rec dl{margin:0;padding:0 13px 12px;display:grid;grid-template-columns:minmax(120px,38%) 1fr;gap:6px 12px;font-size:.92rem}.rec dt{color:#6f6560}.rec dd{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}.rec .acts{padding:0 13px 12px;display:flex;gap:8px}.rec .acts button,.rec dd button{background:none;border:1px solid #efd9ce;border-radius:8px;padding:7px 10px;cursor:pointer;font:inherit;font-size:.85rem}@media(max-width:600px){.rec dl{grid-template-columns:1fr}.rec dd{margin-bottom:6px}}</style>`;
 
 // Alle rijen ophalen; de API geeft er maximaal 1000 per keer.
 export async function fetchAll(build) {
@@ -20,7 +20,8 @@ export async function fetchAll(build) {
   }
 }
 
-export function recordsHtml(records, nameOf = (e) => e) {
+// editable: knoppen voor bewerken en verwijderen (alleen beheeromgeving).
+export function recordsHtml(records, nameOf = (e) => e, editable = false) {
   if (!records.length) return '<p class="hint">Nog geen beoordelingen gevonden.</p>';
   return [...records]
     .sort((a, b) => rank(a.source) - rank(b.source) || String(a.assessed_on || '').localeCompare(String(b.assessed_on || '')))
@@ -29,18 +30,18 @@ export function recordsHtml(records, nameOf = (e) => e) {
         r.student_email && nameOf(r.student_email)].filter(Boolean).map(esc).join(' · ');
       const rows = Object.entries(r.details || {}).filter(([k]) => k !== 'Teamnummer')
         .map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('');
-      return `<details class="rec"><summary><span><b>${esc(r.source)}</b><br><small>${meta || '&nbsp;'}</small></span>${r.grade ? `<span class="grade">${esc(r.grade)}</span>` : ''}</summary>${rows ? `<dl>${rows}</dl>` : ''}</details>`;
+      return `<details class="rec"><summary><span><b>${esc(r.source)}</b><br><small>${meta || '&nbsp;'}</small></span>${r.grade ? `<span class="grade">${esc(r.grade)}</span>` : ''}</summary>${rows ? `<dl>${rows}</dl>` : ''}${editable ? `<div class="acts"><button data-edit-record="${r.id}">Bewerken</button><button data-del-record="${r.id}">Verwijderen</button></div>` : ''}</details>`;
     }).join('');
 }
 
-export function attendanceHtml(rows) {
+export function attendanceHtml(rows, editable = false) {
   if (!rows.length) return '<p class="hint">Geen aanwezigheid geregistreerd.</p>';
   const people = {};
   for (const r of rows) (people[r.full_name] ||= []).push(r);
   return Object.entries(people).sort(([a], [b]) => a.localeCompare(b)).map(([name, list]) =>
     `<details class="rec"><summary><span><b>${esc(name)}</b></span><span class="grade">${list.length}×</span></summary><dl>${list
       .sort((a, b) => a.checked_at.localeCompare(b.checked_at))
-      .map((r) => `<dt>${day(r.checked_at)}</dt><dd>${esc(r.session || 'Aanwezig')}${r.remark ? ' · ' + esc(r.remark) : ''}</dd>`).join('')}</dl></details>`).join('');
+      .map((r) => `<dt>${day(r.checked_at)}</dt><dd>${esc(r.session || 'Aanwezig')}${r.remark ? ' · ' + esc(r.remark) : ''}${editable ? ` <button data-del-att="${r.id}" title="Verwijderen">×</button>` : ''}</dd>`).join('')}</dl></details>`).join('');
 }
 
 // Beoordelingen van een team en/of losse studenten.
