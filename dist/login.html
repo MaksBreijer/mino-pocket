@@ -4,7 +4,7 @@
 :root{--orange:#ff6b35;--ink:#191720;--line:#ecdcd4;--soft:#fff6f2}*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;background:linear-gradient(135deg,#18161e 55%,var(--orange) 55%);font:16px Arial;color:var(--ink)}main{width:min(92vw,500px);padding:32px;background:#fff;border-radius:24px;box-shadow:15px 15px #0003}.mark{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;background:var(--orange);color:#fff;font:bold 1.4rem Arial}.eyebrow{margin:16px 0 4px;color:#766e69;font-size:.75rem;font-weight:bold;letter-spacing:.11em}h1{margin:0;font-size:2rem}.intro{color:#665f5b}.field-label{display:block;font-weight:bold;margin:18px 0 8px}input{width:100%;border:1px solid var(--line);border-radius:10px;padding:13px;font:inherit}.button{width:100%;margin-top:20px;background:var(--orange);color:#fff;border:0;border-radius:12px;padding:14px;font:bold 1rem Arial;cursor:pointer}.button:disabled{opacity:.6}.switch{background:none;border:0;color:#b9491d;font:inherit;text-decoration:underline;cursor:pointer;padding:0}.error{background:#fff0e8;color:#8a2f0c;border-radius:10px;padding:12px;margin-top:16px}.note{font-size:.8rem;color:#766e69;margin:20px 0 0}@media(max-width:560px){body{background:var(--ink)}main{min-height:100vh;width:100%;border-radius:0;padding:28px 22px}}
 </style>
 <body><main><div class="mark">M</div><p class="eyebrow">MINOR ONDERNEMERSCHAP</p><h1 id="title">Jouw Minor Pocket.</h1><p class="intro" id="intro">Log in voor je student- of coachomgeving.</p>
-<form id="form"><label class="field-label" for="mail">E-mailadres</label><input id="mail" type="email" autocomplete="email" placeholder="naam@hva.nl" required>
+<form id="form"><label class="field-label" for="mail">E-mailadres of gebruikersnaam</label><input id="mail" autocomplete="username" autocapitalize="none" placeholder="naam@hva.nl" required>
 <label class="field-label" for="password">Wachtwoord</label><input id="password" type="password" autocomplete="current-password" minlength="8" required>
 <button class="button" id="submit">Inloggen</button></form>
 <p id="error" class="error" hidden></p>
@@ -17,10 +17,8 @@ let signup = false;
 async function route() {
   const profile = await currentProfile();
   if (!profile) return;
-  if (profile.role === 'admin') {
-    await supabase.auth.signOut();
-    return show('Admins loggen in via de admin-tablet.');
-  }
+  // De admin-omgeving controleert zelf of dit een gekoppelde tablet is.
+  if (profile.role === 'admin') return location.replace('admin/');
   location.replace(homes[profile.role]);
 }
 
@@ -40,7 +38,9 @@ document.querySelector('#switch').onclick = () => {
 form.onsubmit = async (e) => {
   e.preventDefault();
   submit.disabled = true; show('');
-  const credentials = { email: mail.value.trim().toLowerCase(), password: password.value };
+  // Een gebruikersnaam zonder @ hoort bij een admin-account op @minorpocket.nl.
+  const login = mail.value.trim().toLowerCase();
+  const credentials = { email: login.includes('@') ? login : login + '@minorpocket.nl', password: password.value };
   const { data, error: err } = signup
     ? await supabase.auth.signUp(credentials)
     : await supabase.auth.signInWithPassword(credentials);
