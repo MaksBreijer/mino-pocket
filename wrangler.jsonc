@@ -1,6 +1,7 @@
 // Cloudflare Workers: serveert de statische site uit dist/.
+// De naam hoort bij de bestaande Worker, zodat de link hetzelfde blijft.
 {
-  "name": "mino-pocket",
+  "name": "lively-voice-78a8",
   "compatibility_date": "2026-10-01",
   "assets": {
     "directory": "./dist"
