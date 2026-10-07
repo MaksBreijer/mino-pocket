@@ -1,27 +1,42 @@
-<!doctype html><html lang="nl"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Coach · Minor Pocket</title><style>:root{--o:#ff6b35;--i:#1b1820;--l:#efd9ce}*{box-sizing:border-box}body{margin:0;background:#fff8f4;font:16px Arial;color:var(--i)}.bar{background:var(--i);color:#fff;padding:18px max(20px,calc((100% - 940px)/2));display:flex;justify-content:space-between;align-items:center}.bar small{font-weight:normal;color:#cdc7c5}.wrap{max-width:940px;margin:auto;padding:28px}.eyebrow,.hint{color:#6f6560;font-size:.86rem}.eyebrow{font-weight:bold;letter-spacing:.1em}.grid{display:grid;grid-template-columns:280px 1fr;gap:18px}.card{background:#fff;border:1px solid var(--l);border-radius:15px;padding:18px}.company{display:block;width:100%;text-align:left;padding:12px;border:0;border-bottom:1px solid var(--l);background:white;cursor:pointer}.company.active{background:#fff0e8;color:#b9491d}.company:hover{background:#fff6f1}select,textarea,input{width:100%;padding:10px;margin:6px 0 13px;border:1px solid #dcbeb0;border-radius:8px;font:inherit}.save{background:var(--o);color:#fff;border:0;border-radius:8px;padding:11px 14px;font-weight:bold;cursor:pointer}.logout{color:#fff}.empty{padding:16px;background:#fff0e8;border-radius:10px;color:#6f5145}@media(max-width:700px){.grid{grid-template-columns:1fr}.wrap{padding:18px}}.row{padding:10px 0;border-top:1px solid var(--l)}.row small{display:block;color:#6f6560}.ok{color:#536b51}h3{margin:20px 0 6px}</style><body><header class="bar"><b>Minor Pocket · Coach <small id="email"></small></b><a class="logout" href="#" id="logout">Uitloggen</a></header><main class="wrap"><p class="eyebrow" id="period">COACHPORTAAL</p><h1>Mijn toegewezen ondernemingen</h1><p class="hint">De admin koppelt teams en personen per minorperiode. Je ziet alleen jouw eigen koppelingen.</p><div class="grid"><aside class="card"><h2>Mijn teams</h2><div id="companies"><p class="hint">Laden…</p></div></aside><section class="card"><h2 id="title">Kies een onderneming</h2><p id="members" class="hint">Selecteer links een toegewezen onderneming of student.</p><div id="detail" hidden><h3>Inleveringen</h3><div id="submissions"></div><h3>Beoordeling geven</h3><form id="form"><label for="assessment">Assessment</label><select id="assessment"></select><div id="teamPart"><label for="teamScore">Teambeoordeling</label><input id="teamScore" type="number" min="1" max="10" step="0.1" placeholder="Score 1–10"><label for="teamBody">Feedback voor team</label><textarea id="teamBody" placeholder="Concrete feedback voor de onderneming..."></textarea></div><label for="person">Persoonlijke beoordeling</label><select id="person"></select><input id="personScore" type="number" min="1" max="10" step="0.1" placeholder="Score 1–10 (optioneel)"><textarea id="personBody" placeholder="Persoonlijke feedback..."></textarea><button class="save" id="save">Sla beoordeling op</button> <span id="saved"></span></form><h3>Eerder gegeven feedback</h3><div id="given"></div></div></section></div></main>
+<!doctype html><html lang="nl"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Coach · Minor Pocket</title><style>:root{--o:#ff6b35;--i:#1b1820;--l:#efd9ce}*{box-sizing:border-box}body{margin:0;background:#fff8f4;font:16px Arial;color:var(--i)}.bar{background:var(--i);color:#fff;padding:18px max(20px,calc((100% - 940px)/2));display:flex;justify-content:space-between;align-items:center}.bar small{font-weight:normal;color:#cdc7c5}.wrap{max-width:940px;margin:auto;padding:28px}.eyebrow,.hint{color:#6f6560;font-size:.86rem}.eyebrow{font-weight:bold;letter-spacing:.1em}.grid{display:grid;grid-template-columns:280px 1fr;gap:18px}.card{background:#fff;border:1px solid var(--l);border-radius:15px;padding:18px}.company{display:block;width:100%;text-align:left;padding:12px;border:0;border-bottom:1px solid var(--l);background:white;cursor:pointer}.company.active{background:#fff0e8;color:#b9491d}.company:hover{background:#fff6f1}select,textarea,input{width:100%;padding:10px;margin:6px 0 13px;border:1px solid #dcbeb0;border-radius:8px;font:inherit}.save{background:var(--o);color:#fff;border:0;border-radius:8px;padding:11px 14px;font-weight:bold;cursor:pointer}.logout{color:#fff}.empty{padding:16px;background:#fff0e8;border-radius:10px;color:#6f5145}@media(max-width:700px){.grid{grid-template-columns:1fr}.wrap{padding:18px}}.row{padding:10px 0;border-top:1px solid var(--l)}.row small{display:block;color:#6f6560}.ok{color:#536b51}h3{margin:20px 0 6px}</style><body><header class="bar"><b>Minor Pocket · Coach <small id="email"></small></b><a class="logout" href="#" id="logout">Uitloggen</a></header><main class="wrap"><p class="eyebrow" id="period">COACHPORTAAL</p><h1>Mijn toegewezen ondernemingen</h1><select id="periodPick" style="max-width:320px" hidden></select><p class="hint">De admin koppelt teams en personen per minorperiode. Je ziet alleen jouw eigen koppelingen.</p><div class="grid"><aside class="card"><h2>Mijn teams</h2><div id="companies"><p class="hint">Laden…</p></div></aside><section class="card"><h2 id="title">Kies een onderneming</h2><p id="members" class="hint">Selecteer links een toegewezen onderneming of student.</p><div id="detail" hidden><h3>Cijfers en feedback</h3><div id="records"></div><h3>Aanwezigheid</h3><div id="attendance"></div><h3>Inleveringen</h3><div id="submissions"></div><h3>Beoordeling geven</h3><form id="form"><label for="assessment">Assessment</label><select id="assessment"></select><div id="teamPart"><label for="teamScore">Teambeoordeling</label><input id="teamScore" type="number" min="1" max="10" step="0.1" placeholder="Score 1–10"><label for="teamBody">Feedback voor team</label><textarea id="teamBody" placeholder="Concrete feedback voor de onderneming..."></textarea></div><label for="person">Persoonlijke beoordeling</label><select id="person"></select><input id="personScore" type="number" min="1" max="10" step="0.1" placeholder="Score 1–10 (optioneel)"><textarea id="personBody" placeholder="Persoonlijke feedback..."></textarea><button class="save" id="save">Sla beoordeling op</button> <span id="saved"></span></form><h3>Eerder gegeven feedback</h3><div id="given"></div></div></section></div></main>
 <script type="module">
 import { supabase, requireRole, logout, currentPeriod, esc, formatDate, message } from './js/supabase.js';
+import { RECORD_STYLE, recordsHtml, attendanceHtml, loadRecords, loadAttendance } from './js/records.js';
+document.head.insertAdjacentHTML('beforeend', RECORD_STYLE);
 
 const me = await requireRole('coach');
 document.querySelector('#email').textContent = '· ' + (me.full_name || me.email);
 document.querySelector('#logout').onclick = (e) => { e.preventDefault(); logout(); };
 
-const period = await currentPeriod();
-let current = null;
-const { data: assignments } = period
-  ? await supabase.from('coach_assignments').select('*, companies(name)').eq('period_id', period.id).eq('coach_email', me.email)
-  : { data: [] };
-const { data: assessments } = period
-  ? await supabase.from('assessments').select('id, title').eq('period_id', period.id).order('due_at', { nullsFirst: false })
-  : { data: [] };
-document.querySelector('#period').textContent = 'COACHPORTAAL · ' + (period?.name || 'geen actieve periode').toUpperCase();
-document.querySelector('#assessment').innerHTML = assessments.map((a) => `<option value="${a.id}">${esc(a.title)}</option>`).join('');
+const current_period = await currentPeriod();
+let period = current_period, current = null, assignments = [], assessments = [];
+// Alle koppelingen van deze coach, ook uit eerdere minors.
+const { data: all } = await supabase.from('coach_assignments').select('*, companies(name, team_number), periods(name)').eq('coach_email', me.email);
+const periodsSeen = [...new Map(all.map((x) => [x.period_id, x.periods?.name])).entries()].sort((a, b) => String(b[1]).localeCompare(String(a[1])));
+if (current_period && !periodsSeen.some(([id]) => id === current_period.id)) periodsSeen.unshift([current_period.id, current_period.name]);
+const pickPeriod = document.querySelector('#periodPick');
+pickPeriod.innerHTML = periodsSeen.map(([id, name]) => `<option value="${id}">${esc(name)}${id === current_period?.id ? ' (actief)' : ''}</option>`).join('');
+pickPeriod.hidden = periodsSeen.length < 2;
+if (!current_period && periodsSeen.length) period = { id: periodsSeen[0][0], name: periodsSeen[0][1] };
+if (period) pickPeriod.value = period.id;
+pickPeriod.onchange = () => { period = { id: pickPeriod.value, name: pickPeriod.selectedOptions[0].text }; showPeriod(); };
+await showPeriod();
 
-document.querySelector('#companies').innerHTML = assignments.length
-  ? assignments.map((x, i) => `<button class="company" data-i="${i}">${esc(x.companies?.name || x.student_email)}<br><small>${x.company_id ? 'Teambegeleiding' : 'Persoonlijke begeleiding'}</small></button>`).join('')
-  : '<p class="empty">Nog geen koppelingen. Neem contact op met de admin.</p>';
-document.querySelectorAll('.company').forEach((b) => b.onclick = () => pick(+b.dataset.i));
-if (assignments.length) pick(0);
+async function showPeriod() {
+  assignments = all.filter((x) => x.period_id === period?.id)
+    .sort((a, b) => (a.companies?.team_number || 0) - (b.companies?.team_number || 0));
+  ({ data: assessments } = period
+    ? await supabase.from('assessments').select('id, title').eq('period_id', period.id).order('due_at', { nullsFirst: false })
+    : { data: [] });
+  document.querySelector('#period').textContent = 'COACHPORTAAL · ' + (period?.name || 'geen actieve periode').toUpperCase();
+  document.querySelector('#assessment').innerHTML = assessments.map((a) => `<option value="${a.id}">${esc(a.title)}</option>`).join('');
+  document.querySelector('#companies').innerHTML = assignments.length
+    ? assignments.map((x, i) => `<button class="company" data-i="${i}">${x.companies?.team_number ? x.companies.team_number + ' · ' : ''}${esc(x.companies?.name || x.student_email)}<br><small>${x.company_id ? 'Teambegeleiding' : 'Persoonlijke begeleiding'}</small></button>`).join('')
+    : '<p class="empty">Nog geen koppelingen. Neem contact op met de admin.</p>';
+  document.querySelectorAll('.company').forEach((b) => b.onclick = () => pick(+b.dataset.i));
+  document.querySelector('#detail').hidden = true;
+  if (assignments.length) pick(0);
+}
 
 async function pick(i) {
   current = assignments[i];
@@ -29,8 +44,13 @@ async function pick(i) {
   const emails = current.company_id
     ? (await supabase.from('company_members').select('email').eq('company_id', current.company_id)).data.map((m) => m.email)
     : [current.student_email];
-  const { data: people } = await supabase.from('profiles').select('id, email, full_name').in('email', emails);
-  const name = (email) => people.find((p) => p.email === email)?.full_name || email;
+  const [{ data: people }, { data: students }] = await Promise.all([
+    supabase.from('profiles').select('id, email, full_name').in('email', emails),
+    current.company_id
+      ? supabase.from('students').select('email, full_name').eq('company_id', current.company_id)
+      : supabase.from('students').select('email, full_name').eq('email', current.student_email),
+  ]);
+  const name = (email) => students.find((p) => p.email === email)?.full_name || people.find((p) => p.email === email)?.full_name || email;
   document.querySelector('#title').textContent = current.companies?.name || name(current.student_email);
   document.querySelector('#members').textContent = emails.map(name).join(' · ') || 'Nog geen teamleden';
   document.querySelector('#teamPart').hidden = !current.company_id;
@@ -50,6 +70,13 @@ async function pick(i) {
     window.open(data.signedUrl, '_blank');
   });
   loadGiven(emails);
+  document.querySelector('#records').innerHTML = document.querySelector('#attendance').innerHTML = '<p class="hint">Laden…</p>';
+  const [records, attendance] = await Promise.all([
+    loadRecords({ companyIds: current.company_id ? [current.company_id] : [], emails }),
+    loadAttendance(emails),
+  ]);
+  document.querySelector('#records').innerHTML = recordsHtml(records, name);
+  document.querySelector('#attendance').innerHTML = attendanceHtml(attendance);
 }
 
 async function loadGiven(emails) {
