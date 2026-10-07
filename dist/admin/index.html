@@ -2,6 +2,7 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 :root{--o:#ff6b35;--i:#1b1820;--l:#ecd8ce}*{box-sizing:border-box}body{margin:0;background:#f8f5f3;font:17px Arial;color:var(--i)}.bar{background:var(--i);color:#fff;padding:18px max(20px,calc((100% - 1080px)/2));display:flex;justify-content:space-between;align-items:center;gap:12px}.bar small{font-weight:normal;color:#cdc7c5}.bar button{background:none;border:1px solid #fff5;color:#fff;border-radius:8px;padding:9px 12px;font:inherit;cursor:pointer}.wrap{max-width:1080px;margin:auto;padding:24px}.eyebrow{color:#6f6560;font-size:.8rem;font-weight:bold;letter-spacing:.1em}.card{background:#fff;border:1px solid var(--l);border-radius:15px;padding:20px;margin:16px 0}.card h2{margin-top:0}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}label{display:block;font-weight:bold;margin-top:9px}input,select,textarea{width:100%;padding:13px;border:1px solid #dcbeb0;border-radius:8px;margin:7px 0 13px;font:inherit}.button{background:var(--o);color:#fff;border:0;border-radius:8px;padding:13px 16px;font-weight:bold;font-size:1rem;cursor:pointer}.button.ghost{background:#fff;color:var(--i);border:1px solid var(--l)}.result{background:#fff0e8;padding:12px;border-radius:8px}.row{padding:12px 0;border-top:1px solid var(--l);display:flex;justify-content:space-between;gap:12px;align-items:center}.row small{display:block;color:#6f6560}.row button{background:none;border:1px solid var(--l);border-radius:8px;padding:8px 10px;cursor:pointer;font:inherit}.tabs{display:flex;gap:8px;margin:14px 0;flex-wrap:wrap}.tab{background:#fff;border:1px solid var(--l);padding:11px 14px;border-radius:8px;cursor:pointer;font:inherit}.tab.active{border-color:var(--o);background:#fff0e8}.gate{min-height:100vh;display:grid;place-items:center;background:var(--i);padding:16px}.gate main{width:min(100%,480px);background:#fff;border-radius:22px;padding:30px}.gate h1{margin:6px 0}.code{font:bold 2rem monospace;letter-spacing:.2em;text-align:center;padding:16px;background:#fff0e8;border-radius:12px}.nav{display:flex;gap:8px;flex-wrap:wrap;position:sticky;top:0;background:#f8f5f3;padding:10px 0;z-index:1}.nav a{padding:10px 13px;border:1px solid var(--l);border-radius:20px;background:#fff;color:var(--i);text-decoration:none;font-size:.9rem}[hidden]{display:none!important}@media(max-width:700px){.grid{grid-template-columns:1fr}.wrap{padding:16px}}
+[hidden]{display:none!important}dialog{border:0;border-radius:14px;padding:22px;width:min(640px,calc(100% - 32px));max-height:90vh}dialog::backdrop{background:#1b182080}.search{margin-top:14px}
 </style>
 <body>
 <div class="gate" id="loginGate" hidden><main><p class="eyebrow">MINOR POCKET · ADMIN</p><h1>Beheeromgeving</h1><p>Alleen voor admins, op de gekoppelde admin-tablet.</p>
@@ -22,14 +23,14 @@
 
 <section class="card" id="s-people"><h2>Personen uitnodigen</h2><p>Alleen uitgenodigde e-mailadressen kunnen een account aanmaken. Importeer een klas als CSV of Excel met de kolommen <b>email</b>, <b>naam</b>, <b>rol</b> (student/coach/admin) en optioneel <b>onderneming</b>. Ondernemingen worden aangemaakt in de gekozen periode.</p>
 <input id="file" type="file" accept=".csv,.xlsx,.xls"><button class="button" id="importBtn">Importeer bestand</button><p id="importResult" class="result" hidden></p>
-<form id="inviteForm" class="grid" style="margin-top:12px"><div><label for="invEmail">E-mailadres</label><input id="invEmail" type="email" required></div><div><label for="invName">Naam</label><input id="invName"></div><div><label for="invRole">Rol</label><select id="invRole"><option value="student">Student</option><option value="coach">Coach</option><option value="admin">Admin</option></select></div><div style="align-self:end"><button class="button">Uitnodigen</button></div></form><div id="people"></div></section>
+<form id="inviteForm" class="grid" style="margin-top:12px"><div><label for="invEmail">E-mailadres</label><input id="invEmail" type="email" required></div><div><label for="invName">Naam</label><input id="invName"></div><div><label for="invRole">Rol</label><select id="invRole"><option value="student">Student</option><option value="coach">Coach</option><option value="admin">Admin</option></select></div><div style="align-self:end"><button class="button">Uitnodigen</button></div></form><input id="peopleSearch" class="search" type="search" placeholder="Zoek op naam, e-mailadres of studentnummer"><div id="people"></div></section>
 
 <section class="card" id="s-companies"><h2>Ondernemingen</h2><form id="companyForm" style="display:flex;gap:8px"><input id="companyName" placeholder="Naam onderneming" required style="margin:0"><button class="button">Toevoegen</button></form>
-<div class="grid" style="margin-top:12px"><div><label for="memberCompany">Student toevoegen aan</label><select id="memberCompany"></select></div><div><label for="memberEmail">Student</label><select id="memberEmail"></select></div></div><button class="button ghost" id="addMember">Student koppelen</button><div id="companies"></div></section>
+<div class="grid" style="margin-top:12px"><div><label for="memberCompany">Student toevoegen aan</label><select id="memberCompany"></select></div><div><label for="memberEmail">Student</label><select id="memberEmail"></select></div></div><button class="button ghost" id="addMember">Student koppelen</button><input id="companySearch" class="search" type="search" placeholder="Zoek op team, teamnummer, idee of student"><div id="companies"></div></section>
 
 <section class="card" id="s-coach"><h2>Coach koppelen</h2><div class="tabs"><button class="tab active" id="teamTab">Aan team</button><button class="tab" id="personTab">Aan persoon</button></div><p id="modeText">Koppel een coach aan een hele onderneming.</p><div class="grid"><div><label id="subjectLabel" for="subject">Onderneming</label><select id="subject"></select></div><div><label for="coach">Coach</label><select id="coach"></select></div></div><button class="button" id="assignBtn">Koppeling opslaan</button><p id="assignResult" class="result" hidden></p><h3>Koppelingen in deze periode</h3><div id="assigned"></div></section>
 
-<section class="card" id="s-results"><h2>Resultaten per team</h2><p>Cijfers, feedback en aanwezigheid van een team in de gekozen periode, zoals coaches en studenten die ook zien.</p><label for="resultCompany">Team</label><select id="resultCompany"></select><div id="results"></div></section>
+<section class="card" id="s-results"><h2>Resultaten per team</h2><p>Cijfers, feedback en aanwezigheid van een team in de gekozen periode, zoals coaches en studenten die ook zien.</p><label for="resultCompany">Team</label><select id="resultCompany"></select><button class="button ghost" id="addRecord" hidden>Beoordeling toevoegen</button><div id="results"></div></section>
 
 <section class="card" id="s-assess"><h2>Assessments</h2><form id="assessForm"><div class="grid"><div><label for="aTitle">Titel</label><input id="aTitle" required></div><div><label for="aDue">Deadline</label><input id="aDue" type="datetime-local"></div></div><label for="aDesc">Wat maakt de student?</label><textarea id="aDesc"></textarea><label for="aHint">Bestandstype</label><input id="aHint" placeholder="Bijv. PDF of PowerPoint"><button class="button">Assessment opslaan</button></form><div id="assessments"></div></section>
 
@@ -37,6 +38,8 @@
 
 <section class="card" id="s-devices"><h2>Apparaten</h2><p>Alleen deze apparaten geven toegang tot de beheeromgeving. Maak een koppelcode om een extra tablet toe te voegen; de code is 15 minuten geldig.</p><button class="button" id="newCode">Nieuwe koppelcode</button><div id="codeBox" hidden><p class="code" id="code"></p></div><div id="devices"></div></section>
 </main></div>
+
+<dialog id="editor"><form method="dialog"><h2 id="editTitle"></h2><div id="editFields"></div><div style="display:flex;gap:8px"><button class="button" value="save">Opslaan</button><button class="button ghost" value="cancel" formnovalidate>Annuleren</button></div></form></dialog>
 
 <script type="module">
 import { supabase, currentProfile, deviceToken, setDeviceToken, esc, formatDate, message } from '../js/supabase.js';
@@ -46,6 +49,27 @@ document.head.insertAdjacentHTML('beforeend', RECORD_STYLE);
 const $ = (s) => document.querySelector(s);
 const show = (el, text) => { el.hidden = !text; el.textContent = text || ''; };
 let me, periods = [], mode = 'team', signup = false;
+
+// Bewerkvenster. fields: [{ key, label, value, type, options, required }]; geeft de ingevulde waarden terug, of null bij annuleren.
+function edit(title, fields) {
+  const box = $('#editor');
+  $('#editTitle').textContent = title;
+  $('#editFields').innerHTML = fields.map((f, i) => `<label for="ef${i}">${esc(f.label)}</label>` + (f.options
+    ? `<select id="ef${i}">${f.options.map(([v, t]) => `<option value="${esc(v)}"${String(v) === String(f.value ?? '') ? ' selected' : ''}>${esc(t)}</option>`).join('')}</select>`
+    : f.type === 'textarea' ? `<textarea id="ef${i}" rows="${Math.min(10, Math.ceil(String(f.value ?? '').length / 60) + 2)}">${esc(f.value ?? '')}</textarea>`
+    : `<input id="ef${i}" type="${f.type || 'text'}" value="${esc(f.value ?? '')}"${f.required ? ' required' : ''}>`)).join('');
+  box.returnValue = '';
+  box.showModal();
+  return new Promise((ok) => box.onclose = () => ok(box.returnValue === 'save'
+    ? Object.fromEntries(fields.map((f, i) => [f.key, $('#ef' + i).value.trim()])) : null));
+}
+const filter = (box, list) => {
+  const q = $(box).value.trim().toLowerCase();
+  $(list).querySelectorAll('[data-search]').forEach((r) => r.hidden = !!q && !r.dataset.search.includes(q));
+};
+$('#peopleSearch').oninput = () => filter('#peopleSearch', '#people');
+$('#companySearch').oninput = () => filter('#companySearch', '#companies');
+const key = (...parts) => esc(parts.filter(Boolean).join(' ').toLowerCase());
 
 async function start() {
   ['#loginGate', '#pairGate', '#app'].forEach((s) => $(s).hidden = true);
@@ -137,9 +161,43 @@ async function renderPeople() {
   const account = (email) => (profiles.some((p) => p.email === email) ? 'account actief' : 'nog geen account');
   const roles = { coach: 'Coach', admin: 'Admin' };
   $('#people').innerHTML = `<h3>Studenten in deze periode (${students.length})</h3>` + (students.map((s) =>
-    `<div class="row"><span><b>${esc(s.full_name)}</b><small>${[s.student_number, s.email || 'geen e-mailadres, kan niet inloggen', s.email && account(s.email), s.active === false && 'niet actief'].filter(Boolean).map(esc).join(' · ')}</small></span><button data-del-student="${s.id}">Verwijderen</button></div>`).join('') || '<p>Nog geen studenten in deze periode.</p>')
+    `<div class="row" data-search="${key(s.full_name, s.email, s.student_number)}"><span><b>${esc(s.full_name)}</b><small>${[s.student_number, s.email || 'geen e-mailadres, kan niet inloggen', s.email && account(s.email), s.active === false && 'niet actief'].filter(Boolean).map(esc).join(' · ')}</small></span><span><button data-edit-student="${s.id}">Bewerken</button> <button data-del-student="${s.id}">Verwijderen</button></span></div>`).join('') || '<p>Nog geen studenten in deze periode.</p>')
     + `<h3>Coaches en admins (${invites.length})</h3>` + invites.map((i) =>
-    `<div class="row"><span><b>${esc(i.full_name || i.email)}</b><small>${roles[i.role]} · ${esc(i.email)} · ${account(i.email)}</small></span><button data-del-invite="${esc(i.email)}">Verwijderen</button></div>`).join('');
+    `<div class="row" data-search="${key(i.full_name, i.email)}"><span><b>${esc(i.full_name || i.email)}</b><small>${roles[i.role]} · ${esc(i.email)} · ${account(i.email)}</small></span><span><button data-edit-invite="${esc(i.email)}">Bewerken</button> <button data-del-invite="${esc(i.email)}">Verwijderen</button></span></div>`).join('');
+  filter('#peopleSearch', '#people');
+  document.querySelectorAll('[data-edit-invite]').forEach((b) => b.onclick = async () => {
+    const i = invites.find((x) => x.email === b.dataset.editInvite);
+    const v = await edit('Persoon bewerken', [
+      { key: 'full_name', label: 'Naam', value: i.full_name },
+      { key: 'role', label: 'Rol', value: i.role, options: [['coach', 'Coach'], ['admin', 'Admin']] },
+    ]);
+    if (!v) return;
+    const { error } = await supabase.from('invites').update({ full_name: v.full_name || null, role: v.role }).eq('email', i.email);
+    if (error) return alert(message(error));
+    renderAll();
+  });
+  document.querySelectorAll('[data-edit-student]').forEach((b) => b.onclick = async () => {
+    const s = students.find((x) => x.id === b.dataset.editStudent);
+    const v = await edit('Student bewerken', [
+      { key: 'full_name', label: 'Naam', value: s.full_name, required: true },
+      { key: 'student_number', label: 'Studentnummer', value: s.student_number },
+      { key: 'email', label: 'E-mailadres (nodig om in te loggen)', value: s.email, type: 'email' },
+      { key: 'company_id', label: 'Team', value: s.company_id, options: [['', 'Geen team'], ...companies.map((c) => [c.id, (c.team_number ? c.team_number + ' · ' : '') + c.name])] },
+      { key: 'active', label: 'Status', value: String(s.active !== false), options: [['true', 'Actief'], ['false', 'Niet actief']] },
+    ]);
+    if (!v) return;
+    const email = v.email.toLowerCase() || null, company_id = v.company_id || null;
+    let { error } = await supabase.from('students').update({ full_name: v.full_name, student_number: v.student_number || null, email, company_id, active: v.active === 'true' }).eq('id', s.id);
+    // Teamlidmaatschap en uitnodiging volgen het e-mailadres en team.
+    if (!error && (email !== s.email || company_id !== s.company_id)) {
+      const ids = companies.map((c) => c.id);
+      if (s.email && ids.length) await supabase.from('company_members').delete().eq('email', s.email).in('company_id', ids);
+      if (email) ({ error } = await supabase.from('invites').upsert({ email, full_name: v.full_name, role: 'student' }, { ignoreDuplicates: true }));
+      if (!error && email && company_id) ({ error } = await supabase.from('company_members').upsert({ company_id, email }, { ignoreDuplicates: true }));
+    }
+    if (error) return alert(message(error));
+    renderAll();
+  });
   document.querySelectorAll('[data-del-invite]').forEach((b) => b.onclick = async () => {
     if (!confirm('Uitnodiging intrekken? Een bestaand account blijft bestaan.')) return;
     await supabase.from('invites').delete().eq('email', b.dataset.delInvite);
@@ -214,7 +272,21 @@ async function renderCompanies() {
   $('#resultCompany').innerHTML = '<option value="">Kies een team</option>' + companies.map((c) => `<option value="${c.id}">${esc(label(c))}</option>`).join('');
   $('#resultCompany').value = companies.some((c) => c.id === keep) ? keep : '';
   renderResults();
-  $('#companies').innerHTML = companies.length ? companies.map((c) => `<div class="row"><span><b>${esc(label(c))}</b>${c.idea ? `<small>${esc(c.idea)}</small>` : ''}<small>${c.company_members.map((m) => `${esc(name(m.email))} <a href="#" data-remove="${c.id}|${esc(m.email)}">×</a>`).join(' · ') || 'Nog geen studenten'}</small></span><button data-del-company="${c.id}">Verwijderen</button></div>`).join('') : '<p>Nog geen ondernemingen in deze periode.</p>';
+  $('#companies').innerHTML = companies.length ? companies.map((c) => `<div class="row" data-search="${key(String(c.team_number || ''), c.name, c.idea, ...c.company_members.map((m) => name(m.email)))}"><span><b>${esc(label(c))}</b>${c.idea ? `<small>${esc(c.idea)}</small>` : ''}<small>${c.company_members.map((m) => `${esc(name(m.email))} <a href="#" data-remove="${c.id}|${esc(m.email)}">×</a>`).join(' · ') || 'Nog geen studenten'}</small></span><span><button data-edit-company="${c.id}">Bewerken</button> <button data-del-company="${c.id}">Verwijderen</button></span></div>`).join('') : '<p>Nog geen ondernemingen in deze periode.</p>';
+  filter('#companySearch', '#companies');
+  document.querySelectorAll('[data-edit-company]').forEach((b) => b.onclick = async () => {
+    const c = companies.find((x) => x.id === b.dataset.editCompany);
+    const v = await edit('Onderneming bewerken', [
+      { key: 'name', label: 'Naam', value: c.name, required: true },
+      { key: 'team_number', label: 'Teamnummer', value: c.team_number, type: 'number' },
+      { key: 'idea', label: 'Idee', value: c.idea, type: 'textarea' },
+      { key: 'website', label: 'Website', value: c.website },
+    ]);
+    if (!v) return;
+    const { error } = await supabase.from('companies').update({ name: v.name, team_number: v.team_number ? +v.team_number : null, idea: v.idea || null, website: v.website || null }).eq('id', c.id);
+    if (error) return alert(message(error));
+    renderAll();
+  });
   document.querySelectorAll('[data-del-company]').forEach((b) => b.onclick = async () => {
     if (!confirm('Onderneming verwijderen, inclusief koppelingen en teamfeedback?')) return;
     await supabase.from('companies').delete().eq('id', b.dataset.delCompany);
@@ -276,16 +348,58 @@ $('#assignBtn').onclick = async () => {
 };
 
 // ------------------------------------------------------------ resultaten
+let records = [];
 async function renderResults() {
   const id = $('#resultCompany').value;
+  $('#addRecord').hidden = !id;
   if (!id) return $('#results').innerHTML = '';
   $('#results').innerHTML = '<p>Laden…</p>';
   const emails = companies.find((c) => c.id === id)?.company_members.map((m) => m.email) || [];
-  const [records, attendance] = await Promise.all([loadRecords({ companyIds: [id], emails }), loadAttendance(emails)]);
+  const [recs, attendance] = await Promise.all([loadRecords({ companyIds: [id], emails }), loadAttendance(emails)]);
   if ($('#resultCompany').value !== id) return;
-  $('#results').innerHTML = `<h3>Cijfers en feedback</h3>${recordsHtml(records, nameOf)}<h3>Aanwezigheid</h3>${attendanceHtml(attendance)}`;
+  records = recs;
+  $('#results').innerHTML = `<h3>Cijfers en feedback (${records.length})</h3>${recordsHtml(records, nameOf, true)}<h3>Aanwezigheid</h3>${attendanceHtml(attendance, true)}`;
+  document.querySelectorAll('[data-edit-record]').forEach((b) => b.onclick = () => editRecord(records.find((r) => r.id === b.dataset.editRecord)));
+  document.querySelectorAll('[data-del-record]').forEach((b) => b.onclick = async () => {
+    if (!confirm('Deze beoordeling verwijderen?')) return;
+    const { error } = await supabase.from('assessment_records').delete().eq('id', b.dataset.delRecord);
+    if (error) return alert(message(error));
+    renderResults();
+  });
+  document.querySelectorAll('[data-del-att]').forEach((b) => b.onclick = async () => {
+    if (!confirm('Deze aanwezigheid verwijderen?')) return;
+    const { error } = await supabase.from('attendance').delete().eq('id', b.dataset.delAtt);
+    if (error) return alert(message(error));
+    renderResults();
+  });
 }
 $('#resultCompany').onchange = renderResults;
+$('#addRecord').onclick = () => editRecord(null);
+
+// Beoordeling bewerken of toevoegen; elk feedbackveld uit de spreadsheet is apart aan te passen.
+async function editRecord(r) {
+  const company = companies.find((c) => c.id === $('#resultCompany').value);
+  const details = r ? { ...r.details } : { Feedback: '' };
+  const fieldKeys = Object.keys(details).filter((k) => k !== 'Teamnummer');
+  const v = await edit(r ? 'Beoordeling bewerken' : 'Beoordeling toevoegen', [
+    { key: 'source', label: 'Onderdeel', value: r?.source, required: true },
+    { key: 'student_email', label: 'Voor', value: r?.student_email, options: [['', 'Heel team'], ...company.company_members.map((m) => [m.email, nameOf(m.email)])] },
+    { key: 'grade', label: 'Cijfer of resultaat', value: r?.grade },
+    { key: 'assessed_on', label: 'Datum', value: r?.assessed_on, type: 'date' },
+    { key: 'assessors', label: 'Beoordelaar(s)', value: r?.assessors },
+    { key: 'attempt', label: 'Kans', value: r?.attempt },
+    ...fieldKeys.map((k, i) => ({ key: 'd' + i, label: k, value: typeof details[k] === 'string' ? details[k] : JSON.stringify(details[k]), type: 'textarea' })),
+  ]);
+  if (!v) return;
+  fieldKeys.forEach((k, i) => { if (v['d' + i]) details[k] = v['d' + i]; else delete details[k]; });
+  const row = { source: v.source, student_email: v.student_email || null, grade: v.grade || null, assessed_on: v.assessed_on || null,
+    assessors: v.assessors || null, attempt: v.attempt || null, details };
+  const { error } = r
+    ? await supabase.from('assessment_records').update(row).eq('id', r.id)
+    : await supabase.from('assessment_records').insert({ ...row, company_id: company.id, period_id: periodId() });
+  if (error) return alert(message(error));
+  renderResults();
+}
 
 // ------------------------------------------------------------ Database MO
 $('#moBtn').onclick = async () => {
