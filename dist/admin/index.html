@@ -13,9 +13,12 @@
 <p id="pairError" class="result" hidden></p><p><button class="tab" id="pairLogout" type="button">Uitloggen</button></p></main></div>
 
 <div id="app" hidden><header class="bar"><b>Minor Pocket · Admin <small id="who"></small></b><button id="logout">Uitloggen</button></header><main class="wrap"><p class="eyebrow">ADMINPORTAAL · MINOREN, KOPPELINGEN EN ROOSTER</p><h1>Beheeromgeving</h1>
-<nav class="nav"><a href="#s-period">Periode</a><a href="#s-people">Personen</a><a href="#s-companies">Ondernemingen</a><a href="#s-coach">Coaches</a><a href="#s-assess">Assessments</a><a href="#s-schedule">Rooster</a><a href="#s-devices">Apparaten</a></nav>
+<nav class="nav"><a href="#s-period">Periode</a><a href="#s-mo">Database MO</a><a href="#s-people">Personen</a><a href="#s-companies">Ondernemingen</a><a href="#s-coach">Coaches</a><a href="#s-results">Resultaten</a><a href="#s-assess">Assessments</a><a href="#s-schedule">Rooster</a><a href="#s-devices">Apparaten</a></nav>
 
 <section class="card" id="s-period"><h2>Werk in een minorperiode</h2><p>Kies de periode waarvoor je teams, personen en rooster beheert. De actieve periode is wat studenten en coaches zien.</p><select id="period"></select><div class="grid"><button class="button ghost" id="makeCurrent">Maak deze periode actief</button><form id="periodForm" style="display:flex;gap:8px"><input id="periodName" placeholder="Nieuwe periode, bijv. Minor 43 · halfjaar 1" required style="margin:0"><button class="button">Toevoegen</button></form></div></section>
+
+<section class="card" id="s-mo"><h2>Database MO importeren</h2><p>Zet de spreadsheet "Database MO" in de app: coaches, teams (met coaches), studenten, alle assessments, OP's, sprints, cijferlijsten en aanwezigheid. Download de sheet in Google Sheets via <b>Bestand → Downloaden → Microsoft Excel (.xlsx)</b> en kies dat bestand hier. Opnieuw importeren is veilig: bestaande gegevens worden bijgewerkt en niets wordt dubbel toegevoegd.</p>
+<input id="moFile" type="file" accept=".xlsx"><button class="button" id="moBtn">Importeer Database MO</button><p id="moResult" class="result" hidden></p></section>
 
 <section class="card" id="s-people"><h2>Personen uitnodigen</h2><p>Alleen uitgenodigde e-mailadressen kunnen een account aanmaken. Importeer een klas als CSV of Excel met de kolommen <b>email</b>, <b>naam</b>, <b>rol</b> (student/coach/admin) en optioneel <b>onderneming</b>. Ondernemingen worden aangemaakt in de gekozen periode.</p>
 <input id="file" type="file" accept=".csv,.xlsx,.xls"><button class="button" id="importBtn">Importeer bestand</button><p id="importResult" class="result" hidden></p>
@@ -26,6 +29,8 @@
 
 <section class="card" id="s-coach"><h2>Coach koppelen</h2><div class="tabs"><button class="tab active" id="teamTab">Aan team</button><button class="tab" id="personTab">Aan persoon</button></div><p id="modeText">Koppel een coach aan een hele onderneming.</p><div class="grid"><div><label id="subjectLabel" for="subject">Onderneming</label><select id="subject"></select></div><div><label for="coach">Coach</label><select id="coach"></select></div></div><button class="button" id="assignBtn">Koppeling opslaan</button><p id="assignResult" class="result" hidden></p><h3>Koppelingen in deze periode</h3><div id="assigned"></div></section>
 
+<section class="card" id="s-results"><h2>Resultaten per team</h2><p>Cijfers, feedback en aanwezigheid van een team in de gekozen periode, zoals coaches en studenten die ook zien.</p><label for="resultCompany">Team</label><select id="resultCompany"></select><div id="results"></div></section>
+
 <section class="card" id="s-assess"><h2>Assessments</h2><form id="assessForm"><div class="grid"><div><label for="aTitle">Titel</label><input id="aTitle" required></div><div><label for="aDue">Deadline</label><input id="aDue" type="datetime-local"></div></div><label for="aDesc">Wat maakt de student?</label><textarea id="aDesc"></textarea><label for="aHint">Bestandstype</label><input id="aHint" placeholder="Bijv. PDF of PowerPoint"><button class="button">Assessment opslaan</button></form><div id="assessments"></div></section>
 
 <section class="card" id="s-schedule"><h2>Schoolrooster aanpassen</h2><p>Voeg lesmomenten, workshops of coachmomenten toe voor de gekozen periode.</p><form id="eventForm"><div class="grid"><div><label for="date">Datum</label><input id="date" type="date" required><label for="time">Tijd</label><input id="time" type="time" required></div><div><label for="event">Activiteit</label><input id="event" placeholder="Bijv. Werkcollege Validatie" required><label for="location">Locatie</label><input id="location" placeholder="Bijv. M.1.23"></div></div><button class="button">Roostermoment opslaan</button></form><div id="schedule"></div></section>
@@ -35,6 +40,9 @@
 
 <script type="module">
 import { supabase, currentProfile, deviceToken, setDeviceToken, esc, formatDate, message } from '../js/supabase.js';
+import { RECORD_STYLE, recordsHtml, attendanceHtml, loadRecords, loadAttendance } from '../js/records.js';
+import { transformMO } from './import-mo.js';
+document.head.insertAdjacentHTML('beforeend', RECORD_STYLE);
 const $ = (s) => document.querySelector(s);
 const show = (el, text) => { el.hidden = !text; el.textContent = text || ''; };
 let me, periods = [], mode = 'team', signup = false;
@@ -86,7 +94,7 @@ $('#logout').onclick = signOut;
 // ------------------------------------------------------------ periode
 const periodId = () => $('#period').value;
 async function loadPeriods() {
-  const { data } = await supabase.from('periods').select('*').order('name');
+  const { data } = await supabase.from('periods').select('*').order('name', { ascending: false });
   periods = data;
   const keep = periodId() || periods.find((p) => p.is_current)?.id;
   $('#period').innerHTML = periods.map((p) => `<option value="${p.id}">${esc(p.name)}${p.is_current ? ' (actief)' : ''}</option>`).join('');
@@ -116,30 +124,44 @@ async function renderAll() {
 }
 
 // ------------------------------------------------------------ personen
-let invites = [], profiles = [];
+let invites = [], students = [], profiles = [];
+const nameOf = (email) => students.find((s) => s.email === email)?.full_name || invites.find((i) => i.email === email)?.full_name || email;
+const periodName = () => periods.find((p) => p.id === periodId())?.name;
 async function renderPeople() {
-  [{ data: invites }, { data: profiles }] = await Promise.all([
-    supabase.from('invites').select('*').order('role').order('email'),
-    supabase.from('profiles').select('*'),
+  [{ data: invites }, { data: students }] = await Promise.all([
+    supabase.from('invites').select('*').neq('role', 'student').order('role').order('email'),
+    supabase.from('students').select('*').eq('period_id', periodId()).order('full_name'),
   ]);
-  const roles = { student: 'Student', coach: 'Coach', admin: 'Admin' };
-  $('#people').innerHTML = `<h3>${invites.length} uitgenodigd</h3>` + invites.map((i) => {
-    const account = profiles.find((p) => p.email === i.email);
-    return `<div class="row"><span><b>${esc(i.full_name || i.email)}</b><small>${roles[i.role]} · ${esc(i.email)} · ${account ? 'account actief' : 'nog geen account'}</small></span><button data-del-invite="${esc(i.email)}">Verwijderen</button></div>`;
-  }).join('');
+  const emails = [...invites.map((i) => i.email), ...students.map((s) => s.email).filter(Boolean)];
+  ({ data: profiles } = await supabase.from('profiles').select('email').in('email', emails));
+  const account = (email) => (profiles.some((p) => p.email === email) ? 'account actief' : 'nog geen account');
+  const roles = { coach: 'Coach', admin: 'Admin' };
+  $('#people').innerHTML = `<h3>Studenten in deze periode (${students.length})</h3>` + (students.map((s) =>
+    `<div class="row"><span><b>${esc(s.full_name)}</b><small>${[s.student_number, s.email || 'geen e-mailadres, kan niet inloggen', s.email && account(s.email), s.active === false && 'niet actief'].filter(Boolean).map(esc).join(' · ')}</small></span><button data-del-student="${s.id}">Verwijderen</button></div>`).join('') || '<p>Nog geen studenten in deze periode.</p>')
+    + `<h3>Coaches en admins (${invites.length})</h3>` + invites.map((i) =>
+    `<div class="row"><span><b>${esc(i.full_name || i.email)}</b><small>${roles[i.role]} · ${esc(i.email)} · ${account(i.email)}</small></span><button data-del-invite="${esc(i.email)}">Verwijderen</button></div>`).join('');
   document.querySelectorAll('[data-del-invite]').forEach((b) => b.onclick = async () => {
     if (!confirm('Uitnodiging intrekken? Een bestaand account blijft bestaan.')) return;
     await supabase.from('invites').delete().eq('email', b.dataset.delInvite);
     renderPeople();
   });
-  const students = invites.filter((i) => i.role === 'student'), coaches = invites.filter((i) => i.role === 'coach');
-  $('#memberEmail').innerHTML = students.map((s) => `<option value="${esc(s.email)}">${esc(s.full_name || s.email)}</option>`).join('');
-  $('#coach').innerHTML = coaches.map((c) => `<option value="${esc(c.email)}">${esc(c.full_name || c.email)} · ${esc(c.email)}</option>`).join('');
+  document.querySelectorAll('[data-del-student]').forEach((b) => b.onclick = async () => {
+    if (!confirm('Student uit deze periode verwijderen? De uitnodiging en een bestaand account blijven bestaan.')) return;
+    await supabase.from('students').delete().eq('id', b.dataset.delStudent);
+    renderPeople();
+  });
+  const withMail = students.filter((s) => s.email);
+  $('#memberEmail').innerHTML = withMail.map((s) => `<option value="${esc(s.email)}">${esc(s.full_name)}</option>`).join('');
+  $('#coach').innerHTML = invites.filter((i) => i.role === 'coach').map((c) => `<option value="${esc(c.email)}">${esc(c.full_name || c.email)} · ${esc(c.email)}</option>`).join('');
 }
+
+// Studenten horen bij een periode; import_mo maakt ook de uitnodiging aan.
+const addStudents = (list) => supabase.rpc('import_mo', { kind: 'student', rows: list.map((p) => ({ minor: periodName(), name: p.full_name || p.email, email: p.email })) });
 
 $('#inviteForm').onsubmit = async (e) => {
   e.preventDefault();
-  const { error } = await supabase.from('invites').upsert({ email: $('#invEmail').value.trim().toLowerCase(), full_name: $('#invName').value.trim() || null, role: $('#invRole').value });
+  const person = { email: $('#invEmail').value.trim().toLowerCase(), full_name: $('#invName').value.trim() || null, role: $('#invRole').value };
+  const { error } = person.role === 'student' ? await addStudents([person]) : await supabase.from('invites').upsert(person);
   if (error) return alert(message(error));
   e.target.reset();
   renderAll();
@@ -164,7 +186,9 @@ $('#importBtn').onclick = async () => {
   if (!people.length) return show($('#importResult'), 'Geen regels met een e-mailadres gevonden. Controleer de kolomnamen.');
   if (bad.length) return show($('#importResult'), `Onbekende rol bij ${bad[0].email}: "${bad[0].role}". Gebruik student, coach of admin.`);
 
-  let { error } = await supabase.from('invites').upsert(people.map(({ email, full_name, role }) => ({ email, full_name, role })));
+  const staff = people.filter((p) => p.role !== 'student').map(({ email, full_name, role }) => ({ email, full_name, role }));
+  let { error } = staff.length ? await supabase.from('invites').upsert(staff) : {};
+  if (!error) ({ error } = await addStudents(people.filter((p) => p.role === 'student')));
   const names = [...new Set(people.map((p) => p.company).filter(Boolean))];
   if (!error && names.length) {
     ({ error } = await supabase.from('companies').upsert(names.map((name) => ({ period_id: periodId(), name })), { onConflict: 'period_id,name', ignoreDuplicates: true }));
@@ -181,11 +205,16 @@ $('#importBtn').onclick = async () => {
 // ------------------------------------------------------------ ondernemingen
 let companies = [];
 async function renderCompanies() {
-  const { data } = await supabase.from('companies').select('*, company_members(email)').eq('period_id', periodId()).order('name');
+  const { data } = await supabase.from('companies').select('*, company_members(email)').eq('period_id', periodId()).order('team_number', { nullsFirst: false }).order('name');
   companies = data;
-  const name = (email) => invites.find((i) => i.email === email)?.full_name || email;
-  $('#memberCompany').innerHTML = companies.map((c) => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
-  $('#companies').innerHTML = companies.length ? companies.map((c) => `<div class="row"><span><b>${esc(c.name)}</b><small>${c.company_members.map((m) => `${esc(name(m.email))} <a href="#" data-remove="${c.id}|${esc(m.email)}">×</a>`).join(' · ') || 'Nog geen studenten'}</small></span><button data-del-company="${c.id}">Verwijderen</button></div>`).join('') : '<p>Nog geen ondernemingen in deze periode.</p>';
+  const name = nameOf;
+  const label = (c) => (c.team_number ? c.team_number + ' · ' : '') + c.name;
+  $('#memberCompany').innerHTML = companies.map((c) => `<option value="${c.id}">${esc(label(c))}</option>`).join('');
+  const keep = $('#resultCompany').value;
+  $('#resultCompany').innerHTML = '<option value="">Kies een team</option>' + companies.map((c) => `<option value="${c.id}">${esc(label(c))}</option>`).join('');
+  $('#resultCompany').value = companies.some((c) => c.id === keep) ? keep : '';
+  renderResults();
+  $('#companies').innerHTML = companies.length ? companies.map((c) => `<div class="row"><span><b>${esc(label(c))}</b>${c.idea ? `<small>${esc(c.idea)}</small>` : ''}<small>${c.company_members.map((m) => `${esc(name(m.email))} <a href="#" data-remove="${c.id}|${esc(m.email)}">×</a>`).join(' · ') || 'Nog geen studenten'}</small></span><button data-del-company="${c.id}">Verwijderen</button></div>`).join('') : '<p>Nog geen ondernemingen in deze periode.</p>';
   document.querySelectorAll('[data-del-company]').forEach((b) => b.onclick = async () => {
     if (!confirm('Onderneming verwijderen, inclusief koppelingen en teamfeedback?')) return;
     await supabase.from('companies').delete().eq('id', b.dataset.delCompany);
@@ -227,9 +256,9 @@ $('#personTab').onclick = () => setMode('person');
 async function renderCoach() {
   $('#subject').innerHTML = mode === 'team'
     ? companies.map((c) => `<option value="${c.id}">${esc(c.name)}</option>`).join('')
-    : invites.filter((i) => i.role === 'student').map((s) => `<option value="${esc(s.email)}">${esc(s.full_name || s.email)}</option>`).join('');
+    : students.filter((s) => s.email).map((s) => `<option value="${esc(s.email)}">${esc(s.full_name)}</option>`).join('');
   const { data } = await supabase.from('coach_assignments').select('*, companies(name)').eq('period_id', periodId());
-  const name = (email) => invites.find((i) => i.email === email)?.full_name || email;
+  const name = nameOf;
   $('#assigned').innerHTML = data.length ? data.map((x) => `<div class="row"><span><b>${esc(x.companies?.name || name(x.student_email))}</b><small>${x.company_id ? 'Teamcoach' : 'Persoonlijke coach'} · ${esc(name(x.coach_email))}</small></span><button data-del-assign="${x.id}">Verwijderen</button></div>`).join('') : '<p>Nog geen koppelingen voor deze periode.</p>';
   document.querySelectorAll('[data-del-assign]').forEach((b) => b.onclick = async () => {
     await supabase.from('coach_assignments').delete().eq('id', b.dataset.delAssign);
@@ -239,12 +268,51 @@ async function renderCoach() {
 $('#assignBtn').onclick = async () => {
   if (!$('#subject').value || !$('#coach').value) return show($('#assignResult'), 'Voeg eerst een onderneming/student en een coach toe.');
   const row = { period_id: periodId(), coach_email: $('#coach').value, company_id: mode === 'team' ? $('#subject').value : null, student_email: mode === 'person' ? $('#subject').value : null };
-  // Eén coach per team of student per periode: bestaande koppeling vervangen.
-  const del = supabase.from('coach_assignments').delete().eq('period_id', row.period_id);
-  await (mode === 'team' ? del.eq('company_id', row.company_id) : del.eq('student_email', row.student_email));
+  // Een team kan meerdere coaches hebben; een student één persoonlijke coach per periode.
+  if (mode === 'person') await supabase.from('coach_assignments').delete().eq('period_id', row.period_id).eq('student_email', row.student_email);
   const { error } = await supabase.from('coach_assignments').insert(row);
   show($('#assignResult'), error ? message(error) : `${$('#subject').selectedOptions[0].text} is gekoppeld aan ${$('#coach').selectedOptions[0].text}.`);
   renderCoach();
+};
+
+// ------------------------------------------------------------ resultaten
+async function renderResults() {
+  const id = $('#resultCompany').value;
+  if (!id) return $('#results').innerHTML = '';
+  $('#results').innerHTML = '<p>Laden…</p>';
+  const emails = companies.find((c) => c.id === id)?.company_members.map((m) => m.email) || [];
+  const [records, attendance] = await Promise.all([loadRecords({ companyIds: [id], emails }), loadAttendance(emails)]);
+  if ($('#resultCompany').value !== id) return;
+  $('#results').innerHTML = `<h3>Cijfers en feedback</h3>${recordsHtml(records, nameOf)}<h3>Aanwezigheid</h3>${attendanceHtml(attendance)}`;
+}
+$('#resultCompany').onchange = renderResults;
+
+// ------------------------------------------------------------ Database MO
+$('#moBtn').onclick = async () => {
+  const file = $('#moFile').files[0];
+  if (!file) return alert('Kies eerst het Excel-bestand van Database MO.');
+  const out = $('#moResult');
+  $('#moBtn').disabled = true;
+  try {
+    show(out, 'Bestand lezen…');
+    const { steps, unknownCoaches } = transformMO(XLSX, XLSX.read(await file.arrayBuffer()));
+    const labels = { coach: 'coaches', team: 'teams', student: 'studenten', record: 'beoordelingen', attendance: 'aanwezigheden' };
+    const done = [];
+    for (const [kind, rows] of steps) {
+      for (let i = 0; i < rows.length; i += 250) {
+        show(out, `${labels[kind]} importeren: ${Math.min(i + 250, rows.length)} van ${rows.length}…`);
+        const { error } = await supabase.rpc('import_mo', { kind, rows: rows.slice(i, i + 250) });
+        if (error) throw error;
+      }
+      done.push(`${rows.length} ${labels[kind]}`);
+    }
+    show(out, `Klaar: ${done.join(', ')}.` + (unknownCoaches.length ? ` Niet gevonden in tabblad Coaches (geen e-mailadres): ${unknownCoaches.join(', ')}.` : ''));
+    loadPeriods();
+  } catch (error) {
+    show(out, 'Import mislukt: ' + message(error));
+  } finally {
+    $('#moBtn').disabled = false;
+  }
 };
 
 // ------------------------------------------------------------ assessments

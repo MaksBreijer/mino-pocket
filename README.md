@@ -41,6 +41,15 @@ Eerste admin: voeg jezelf toe in de SQL-editor en maak daarna een account aan op
 insert into public.invites (email, full_name, role) values ('jij@voorbeeld.nl', 'Jouw naam', 'admin');
 ```
 
+## Database MO
+
+De bestaande spreadsheet "Database MO" gaat via de beheeromgeving in de app (onderdeel *Database MO importeren*): download de sheet als .xlsx en kies het bestand op de admin-tablet. De omzetting staat in `dist/admin/import-mo.js`, het wegschrijven in `public.import_mo` (migratie 4). Opnieuw importeren is veilig; niets wordt dubbel toegevoegd.
+
+- Elke minor (Minor 33 t/m 42, en oudere teamnummers) is een periode; teams krijgen hun teamnummer, idee en website.
+- Studenten (ook zonder e-mailadres) staan in `students`; met e-mailadres krijgen ze een uitnodiging en teamlidmaatschap.
+- Startup-, tussen- en eindassessments, OP's, sprints, individuele cijfers en de cijferlijsten staan in `assessment_records`; de aanwezigheidsformulieren in `attendance`.
+- Studenten zien de beoordelingen van hun team en hun eigen persoonlijke cijfers, coaches die van hun teams, admins alles. Telefoonnummers en adressen worden niet overgenomen.
+
 ## Installeren
 
 Het Supabase-project **Minor Pocket** (organisatie Minor ondernemerschap HVA, `ftejmutneuokhuitsleg`) heeft alle migraties al en staat ingevuld in `dist/js/config.js`. Voor een nieuw project:
