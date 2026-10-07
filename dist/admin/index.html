@@ -3,6 +3,7 @@
 <style>
 :root{--o:#ff6b35;--i:#1b1820;--l:#ecd8ce}*{box-sizing:border-box}body{margin:0;background:#f8f5f3;font:17px Arial;color:var(--i)}.bar{background:var(--i);color:#fff;padding:18px max(20px,calc((100% - 1080px)/2));display:flex;justify-content:space-between;align-items:center;gap:12px}.bar small{font-weight:normal;color:#cdc7c5}.bar button{background:none;border:1px solid #fff5;color:#fff;border-radius:8px;padding:9px 12px;font:inherit;cursor:pointer}.wrap{max-width:1080px;margin:auto;padding:24px}.eyebrow{color:#6f6560;font-size:.8rem;font-weight:bold;letter-spacing:.1em}.card{background:#fff;border:1px solid var(--l);border-radius:15px;padding:20px;margin:16px 0}.card h2{margin-top:0}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}label{display:block;font-weight:bold;margin-top:9px}input,select,textarea{width:100%;padding:13px;border:1px solid #dcbeb0;border-radius:8px;margin:7px 0 13px;font:inherit}.button{background:var(--o);color:#fff;border:0;border-radius:8px;padding:13px 16px;font-weight:bold;font-size:1rem;cursor:pointer}.button.ghost{background:#fff;color:var(--i);border:1px solid var(--l)}.result{background:#fff0e8;padding:12px;border-radius:8px}.row{padding:12px 0;border-top:1px solid var(--l);display:flex;justify-content:space-between;gap:12px;align-items:center}.row small{display:block;color:#6f6560}.row button{background:none;border:1px solid var(--l);border-radius:8px;padding:8px 10px;cursor:pointer;font:inherit}.tabs{display:flex;gap:8px;margin:14px 0;flex-wrap:wrap}.tab{background:#fff;border:1px solid var(--l);padding:11px 14px;border-radius:8px;cursor:pointer;font:inherit}.tab.active{border-color:var(--o);background:#fff0e8}.gate{min-height:100vh;display:grid;place-items:center;background:var(--i);padding:16px}.gate main{width:min(100%,480px);background:#fff;border-radius:22px;padding:30px}.gate h1{margin:6px 0}.code{font:bold 2rem monospace;letter-spacing:.2em;text-align:center;padding:16px;background:#fff0e8;border-radius:12px}.nav{display:flex;gap:8px;flex-wrap:wrap;position:sticky;top:0;background:#f8f5f3;padding:10px 0;z-index:1}.nav a{padding:10px 13px;border:1px solid var(--l);border-radius:20px;background:#fff;color:var(--i);text-decoration:none;font-size:.9rem}[hidden]{display:none!important}@media(max-width:700px){.grid{grid-template-columns:1fr}.wrap{padding:16px}}
 [hidden]{display:none!important}dialog{border:0;border-radius:14px;padding:22px;width:min(640px,calc(100% - 32px));max-height:90vh}dialog::backdrop{background:#1b182080}.search{margin-top:14px}
+.coachcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;margin-top:12px}.coachcard{border:1px solid var(--l);border-radius:12px;padding:14px}.coachcard h3{margin:0 0 4px}.coachcard .team{padding:8px 0;border-top:1px solid var(--l);display:flex;justify-content:space-between;gap:8px}.coachcard .team small{display:block;color:#6f6560}.coachcard .team button{background:none;border:0;font-size:1.2rem;cursor:pointer;color:#b9491d}.coachcard .add{display:flex;gap:6px;margin-top:8px}.coachcard .add select{margin:0;padding:9px}.coachcard .add button{white-space:nowrap}
 </style>
 <body>
 <div class="gate" id="loginGate" hidden><main><p class="eyebrow">MINOR POCKET · ADMIN</p><h1>Beheeromgeving</h1><p>Alleen voor admins, op de gekoppelde admin-tablet.</p>
@@ -14,9 +15,11 @@
 <p id="pairError" class="result" hidden></p><p><button class="tab" id="pairLogout" type="button">Uitloggen</button></p></main></div>
 
 <div id="app" hidden><header class="bar"><b>Minor Pocket · Admin <small id="who"></small></b><button id="logout">Uitloggen</button></header><main class="wrap"><p class="eyebrow">ADMINPORTAAL · MINOREN, KOPPELINGEN EN ROOSTER</p><h1>Beheeromgeving</h1>
-<nav class="nav"><a href="#s-period">Periode</a><a href="#s-mo">Database MO</a><a href="#s-people">Personen</a><a href="#s-companies">Ondernemingen</a><a href="#s-coach">Coaches</a><a href="#s-results">Resultaten</a><a href="#s-assess">Assessments</a><a href="#s-schedule">Rooster</a><a href="#s-devices">Apparaten</a></nav>
+<nav class="nav"><a href="#s-period">Periode</a><a href="#s-coach">Coaches</a><a href="#s-mo">Database MO</a><a href="#s-people">Personen</a><a href="#s-companies">Ondernemingen</a><a href="#s-results">Resultaten</a><a href="#s-assess">Assessments</a><a href="#s-schedule">Rooster</a><a href="#s-room">Lokaal</a><a href="#s-devices">Apparaten</a></nav>
 
 <section class="card" id="s-period"><h2>Werk in een minorperiode</h2><p>Kies de periode waarvoor je teams, personen en rooster beheert. De actieve periode is wat studenten en coaches zien.</p><select id="period"></select><div class="grid"><button class="button ghost" id="makeCurrent">Maak deze periode actief</button><div style="grid-column:1/-1"><label for="coachFilter">Toon alleen teams en studenten van coach</label><select id="coachFilter"></select><p id="coachSummary" class="hint" hidden></p></div><form id="periodForm" style="display:flex;gap:8px"><input id="periodName" placeholder="Nieuwe periode, bijv. Minor 43 · halfjaar 1" required style="margin:0"><button class="button">Toevoegen</button></form></div></section>
+
+<section class="card" id="s-coach"><h2>Coaches en hun teams</h2><p>Per coach zie je welke teams en studenten bij hem of haar horen in deze minor. Kies een team of student en klik op <b>Toevoegen</b>; met × haal je een koppeling weg.</p><div id="unassigned"></div><div id="coachCards" class="coachcards"></div></section>
 
 <section class="card" id="s-mo"><h2>Database MO importeren</h2><p>Zet de spreadsheet "Database MO" in de app: coaches, teams (met coaches), studenten, alle assessments, OP's, sprints, cijferlijsten en aanwezigheid. Download de sheet in Google Sheets via <b>Bestand → Downloaden → Microsoft Excel (.xlsx)</b> en kies dat bestand hier. Opnieuw importeren is veilig: bestaande gegevens worden bijgewerkt en niets wordt dubbel toegevoegd.</p>
 <input id="moFile" type="file" accept=".xlsx"><button class="button" id="moBtn">Importeer Database MO</button><p id="moResult" class="result" hidden></p></section>
@@ -28,13 +31,15 @@
 <section class="card" id="s-companies"><h2>Ondernemingen</h2><form id="companyForm" style="display:flex;gap:8px"><input id="companyName" placeholder="Naam onderneming" required style="margin:0"><button class="button">Toevoegen</button></form>
 <div class="grid" style="margin-top:12px"><div><label for="memberCompany">Student toevoegen aan</label><select id="memberCompany"></select></div><div><label for="memberEmail">Student</label><select id="memberEmail"></select></div></div><button class="button ghost" id="addMember">Student koppelen</button><input id="companySearch" class="search" type="search" placeholder="Zoek op team, teamnummer, idee of student"><div id="companies"></div></section>
 
-<section class="card" id="s-coach"><h2>Coach koppelen</h2><div class="tabs"><button class="tab active" id="teamTab">Aan team</button><button class="tab" id="personTab">Aan persoon</button></div><p id="modeText">Koppel een coach aan een hele onderneming.</p><div class="grid"><div><label id="subjectLabel" for="subject">Onderneming</label><select id="subject"></select></div><div><label for="coach">Coach</label><select id="coach"></select></div></div><button class="button" id="assignBtn">Koppeling opslaan</button><p id="assignResult" class="result" hidden></p><h3>Koppelingen in deze periode</h3><div id="assigned"></div></section>
+
 
 <section class="card" id="s-results"><h2>Resultaten per team</h2><p>Cijfers, feedback en aanwezigheid van een team in de gekozen periode, zoals coaches en studenten die ook zien.</p><label for="resultCompany">Team</label><select id="resultCompany"></select><button class="button ghost" id="addRecord" hidden>Beoordeling toevoegen</button><div id="results"></div></section>
 
 <section class="card" id="s-assess"><h2>Assessments</h2><form id="assessForm"><div class="grid"><div><label for="aTitle">Titel</label><input id="aTitle" required></div><div><label for="aDue">Deadline</label><input id="aDue" type="datetime-local"></div></div><label for="aDesc">Wat maakt de student?</label><textarea id="aDesc"></textarea><label for="aHint">Bestandstype</label><input id="aHint" placeholder="Bijv. PDF of PowerPoint"><button class="button">Assessment opslaan</button></form><div id="assessments"></div></section>
 
 <section class="card" id="s-schedule"><h2>Schoolrooster aanpassen</h2><p>Voeg lesmomenten, workshops of coachmomenten toe voor de gekozen periode.</p><form id="eventForm"><div class="grid"><div><label for="date">Datum</label><input id="date" type="date" required><label for="time">Tijd</label><input id="time" type="time" required></div><div><label for="event">Activiteit</label><input id="event" placeholder="Bijv. Werkcollege Validatie" required><label for="location">Locatie</label><input id="location" placeholder="Bijv. M.1.23"></div></div><button class="button">Roostermoment opslaan</button></form><div id="schedule"></div></section>
+
+<section class="card" id="s-room"><h2>Lokaal reserveren</h2><p>Studenten en coaches reserveren dit lokaal zelf; het kan nooit dubbel geboekt worden. Als admin kun je elke reservering annuleren.</p><div style="display:flex;gap:8px"><input id="roomName" placeholder="Naam van het lokaal" style="margin:0"><button class="button ghost" id="roomRename">Naam opslaan</button></div><div id="rooms"></div></section>
 
 <section class="card" id="s-devices"><h2>Apparaten</h2><p>Alleen deze apparaten geven toegang tot de beheeromgeving. Maak een koppelcode om een extra tablet toe te voegen; de code is 15 minuten geldig.</p><button class="button" id="newCode">Nieuwe koppelcode</button><div id="codeBox" hidden><p class="code" id="code"></p></div><div id="devices"></div></section>
 </main></div>
@@ -45,10 +50,11 @@
 import { supabase, currentProfile, deviceToken, setDeviceToken, esc, formatDate, message } from '../js/supabase.js';
 import { RECORD_STYLE, recordsHtml, attendanceHtml, loadRecords, loadAttendance } from '../js/records.js';
 import { transformMO } from './import-mo.js';
-document.head.insertAdjacentHTML('beforeend', RECORD_STYLE);
+import { ROOM_STYLE, renderRooms } from '../js/rooms.js';
+document.head.insertAdjacentHTML('beforeend', RECORD_STYLE + ROOM_STYLE);
 const $ = (s) => document.querySelector(s);
 const show = (el, text) => { el.hidden = !text; el.textContent = text || ''; };
-let me, periods = [], mode = 'team', signup = false;
+let me, periods = [], signup = false;
 
 // Bewerkvenster. fields: [{ key, label, value, type, options, required }]; geeft de ingevulde waarden terug, of null bij annuleren.
 function edit(title, fields) {
@@ -158,8 +164,22 @@ async function loadAssigns() {
   $('#coachFilter').value = here.some(([e]) => e === keep) ? keep : '';
 }
 
+async function renderRoom() {
+  const { data } = await supabase.from('rooms').select('*').order('sort').limit(1);
+  $('#roomName').value = data?.[0]?.name || '';
+  $('#roomRename').onclick = async () => {
+    const name = $('#roomName').value.trim();
+    if (!name) return;
+    const { error } = data?.[0] ? await supabase.from('rooms').update({ name }).eq('id', data[0].id) : await supabase.from('rooms').insert({ name });
+    if (error) return alert(message(error));
+    renderRoom();
+  };
+  renderRooms($('#rooms'), me, { admin: true });
+}
+
 async function renderAll() {
   if (!periodId()) return;
+  renderRoom();
   await loadAssigns();
   await renderPeople();
   await Promise.all([renderCompanies(), renderAssessments(), renderSchedule(), renderDevices()]);
@@ -230,7 +250,6 @@ async function renderPeople() {
   });
   const withMail = students.filter((s) => s.email);
   $('#memberEmail').innerHTML = withMail.map((s) => `<option value="${esc(s.email)}">${esc(s.full_name)}</option>`).join('');
-  $('#coach').innerHTML = invites.filter((i) => i.role === 'coach').map((c) => `<option value="${esc(c.email)}">${esc(c.full_name || c.email)} · ${esc(c.email)}</option>`).join('');
 }
 
 // Studenten horen bij een periode; import_mo maakt ook de uitnodiging aan.
@@ -338,39 +357,44 @@ $('#addMember').onclick = async () => {
 };
 
 // ------------------------------------------------------------ coaches
-function setMode(m) {
-  mode = m;
-  $('#teamTab').classList.toggle('active', m === 'team');
-  $('#personTab').classList.toggle('active', m === 'person');
-  $('#subjectLabel').textContent = m === 'team' ? 'Onderneming' : 'Student';
-  $('#modeText').textContent = m === 'team' ? 'Koppel een coach aan een hele onderneming.' : 'Koppel een coach voor persoonlijke begeleiding van één student.';
-  renderCoach();
-}
-$('#teamTab').onclick = () => setMode('team');
-$('#personTab').onclick = () => setMode('person');
-
+// Per coach: teams en studenten in deze minor, met snel toevoegen en weghalen.
 async function renderCoach() {
-  $('#subject').innerHTML = mode === 'team'
-    ? companies.map((c) => `<option value="${c.id}">${esc(c.name)}</option>`).join('')
-    : students.filter((s) => s.email).map((s) => `<option value="${esc(s.email)}">${esc(s.full_name)}</option>`).join('');
   await loadAssigns();
-  const data = assigns.filter((a) => !coachSel() || a.coach_email === coachSel());
   const name = nameOf;
-  $('#assigned').innerHTML = data.length ? data.map((x) => `<div class="row"><span><b>${esc(x.companies?.name || name(x.student_email))}</b><small>${x.company_id ? 'Teamcoach' : 'Persoonlijke coach'} · ${esc(name(x.coach_email))}</small></span><button data-del-assign="${x.id}">Verwijderen</button></div>`).join('') : '<p>Nog geen koppelingen voor deze periode.</p>';
+  const label = (c) => (c.team_number ? c.team_number + ' · ' : '') + c.name;
+  const members = (id) => students.filter((s) => s.company_id === id).map((s) => s.full_name);
+  const free = companies.filter((c) => !assigns.some((a) => a.company_id === c.id));
+  $('#unassigned').innerHTML = free.length ? `<p class="result">${free.length} ${free.length === 1 ? 'team heeft' : 'teams hebben'} nog geen coach: ${free.map((c) => esc(label(c))).join(', ')}</p>` : '';
+  const coaches = invites.filter((i) => i.role === 'coach' && (!coachSel() || i.email === coachSel()))
+    .map((c) => ({ ...c, mine: assigns.filter((a) => a.coach_email === c.email) }))
+    .sort((a, b) => b.mine.length - a.mine.length || (a.full_name || a.email).localeCompare(b.full_name || b.email));
+  const teamOptions = [...free, ...companies.filter((c) => !free.includes(c))].map((c) =>
+    `<option value="t|${c.id}">${esc(label(c))}${free.includes(c) ? ' (geen coach)' : ''}</option>`).join('');
+  const studentOptions = students.filter((s) => s.email).map((s) => `<option value="s|${esc(s.email)}">${esc(s.full_name)} (persoonlijk)</option>`).join('');
+  $('#coachCards').innerHTML = coaches.map((c) => {
+    const teams = c.mine.filter((a) => a.company_id), persons = c.mine.filter((a) => !a.company_id);
+    const count = new Set([...teams.flatMap((a) => members(a.company_id)), ...persons.map((a) => a.student_email)]).size;
+    return `<div class="coachcard"><h3>${esc(c.full_name || c.email)}</h3><small class="hint">${teams.length} teams · ${count} studenten</small>`
+      + c.mine.map((a) => `<div class="team"><span><b>${esc(a.companies ? label(companies.find((x) => x.id === a.company_id) || a.companies) : name(a.student_email))}</b><small>${a.company_id ? esc(members(a.company_id).join(', ') || 'Nog geen studenten') : 'Persoonlijke begeleiding'}</small></span><button title="Koppeling weghalen" data-del-assign="${a.id}">×</button></div>`).join('')
+      + `<div class="add"><select data-add-for="${esc(c.email)}"><option value="">Team of student kiezen…</option><optgroup label="Teams">${teamOptions}</optgroup><optgroup label="Studenten">${studentOptions}</optgroup></select><button class="button ghost" data-add="${esc(c.email)}">Toevoegen</button></div></div>`;
+  }).join('') || '<p>Nog geen coaches. Nodig ze uit bij Personen of importeer Database MO.</p>';
   document.querySelectorAll('[data-del-assign]').forEach((b) => b.onclick = async () => {
-    await supabase.from('coach_assignments').delete().eq('id', b.dataset.delAssign);
+    const { error } = await supabase.from('coach_assignments').delete().eq('id', b.dataset.delAssign);
+    if (error) return alert(message(error));
+    renderAll();
+  });
+  document.querySelectorAll('[data-add]').forEach((b) => b.onclick = async () => {
+    const coach_email = b.dataset.add;
+    const [kind, value] = (document.querySelector(`[data-add-for="${CSS.escape(coach_email)}"]`).value || '|').split('|');
+    if (!value) return;
+    const row = { period_id: periodId(), coach_email, company_id: kind === 't' ? value : null, student_email: kind === 's' ? value : null };
+    // Een student heeft één persoonlijke coach per periode.
+    if (kind === 's') await supabase.from('coach_assignments').delete().eq('period_id', row.period_id).eq('student_email', value);
+    const { error } = await supabase.from('coach_assignments').insert(row);
+    if (error) return alert(error.code === '23505' ? 'Dit team heeft al een coach. Voer eerst migratie 6 (twee coaches per team) uit in Supabase, of haal de andere coach weg.' : message(error));
     renderAll();
   });
 }
-$('#assignBtn').onclick = async () => {
-  if (!$('#subject').value || !$('#coach').value) return show($('#assignResult'), 'Voeg eerst een onderneming/student en een coach toe.');
-  const row = { period_id: periodId(), coach_email: $('#coach').value, company_id: mode === 'team' ? $('#subject').value : null, student_email: mode === 'person' ? $('#subject').value : null };
-  // Een team kan meerdere coaches hebben; een student één persoonlijke coach per periode.
-  if (mode === 'person') await supabase.from('coach_assignments').delete().eq('period_id', row.period_id).eq('student_email', row.student_email);
-  const { error } = await supabase.from('coach_assignments').insert(row);
-  show($('#assignResult'), error ? message(error) : `${$('#subject').selectedOptions[0].text} is gekoppeld aan ${$('#coach').selectedOptions[0].text}.`);
-  renderAll();
-};
 
 // ------------------------------------------------------------ resultaten
 let records = [];
