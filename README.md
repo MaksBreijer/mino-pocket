@@ -58,3 +58,7 @@ Het Supabase-project **Minor Pocket** (organisatie Minor ondernemerschap HVA, `f
 2. Zet in Supabase onder Authentication → Sign In / Providers → Email **Confirm email** uit (anders krijgt iedereen eerst een bevestigingsmail; het gratis plan verstuurt er maar een paar per uur).
 3. Vul de project-URL en publishable key in `dist/js/config.js` in.
 4. Host de map `dist/` (ChatGPT Site, Cloudflare Pages of elke statische host).
+
+## Live zetten
+
+Elke merge naar `main` zet `dist/` automatisch live op Cloudflare Pages (project `minorondernemerschaphva`, account "minorondernemeschap HVA") via `.github/workflows/deploy.yml`. Daarvoor moet in GitHub onder Settings → Secrets and variables → Actions het secret `CLOUDFLARE_API_TOKEN` staan: een Cloudflare API-token met het recht *Cloudflare Pages: Edit*. Handmatig opnieuw uitrollen kan via Actions → Deploy naar Cloudflare Pages → Run workflow.
