@@ -40,6 +40,8 @@ insert into public.invites (email, full_name, role) values ('jij@voorbeeld.nl', 
 
 ## Installeren
 
+Het Supabase-project **Minor Pocket** (organisatie Minor ondernemerschap HVA, `ftejmutneuokhuitsleg`) heeft alle migraties al en staat ingevuld in `dist/js/config.js`. Voor een nieuw project:
+
 1. Draai de bestanden in `supabase/migrations/` op volgorde in het Supabase-project.
 2. Zet in Supabase onder Authentication → Sign In / Providers → Email **Confirm email** uit (anders krijgt iedereen eerst een bevestigingsmail; het gratis plan verstuurt er maar een paar per uur).
 3. Vul de project-URL en publishable key in `dist/js/config.js` in.
