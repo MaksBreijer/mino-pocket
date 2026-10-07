@@ -1,0 +1,8 @@
+// Cloudflare Workers: serveert de statische site uit dist/.
+{
+  "name": "mino-pocket",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./dist"
+  }
+}
