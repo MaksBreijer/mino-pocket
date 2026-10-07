@@ -32,6 +32,9 @@ Een admin-wachtwoord op een ander apparaat geeft dus geen toegang.
 Alleen uitgenodigde e-mailadressen kunnen een account aanmaken. De admin nodigt mensen uit of importeert
 een klas als CSV/Excel met de kolommen `email`, `naam`, `rol` (student/coach/admin) en optioneel `onderneming`.
 
+Admins kunnen op `/admin/` ook inloggen met alleen een gebruikersnaam; die wordt aangevuld tot `<naam>@minorpocket.nl`.
+Het admin-account `minorondernemerschap26` bestaat al in het project Minor Pocket.
+
 Eerste admin: voeg jezelf toe in de SQL-editor en maak daarna een account aan op `/admin/`:
 
 ```sql

@@ -5,7 +5,7 @@
 </style>
 <body>
 <div class="gate" id="loginGate" hidden><main><p class="eyebrow">MINOR POCKET · ADMIN</p><h1>Beheeromgeving</h1><p>Alleen voor admins, op de gekoppelde admin-tablet.</p>
-<form id="loginForm"><label for="mail">E-mailadres</label><input id="mail" type="email" autocomplete="email" required><label for="password">Wachtwoord</label><input id="password" type="password" autocomplete="current-password" required><button class="button" style="width:100%">Inloggen</button></form>
+<form id="loginForm"><label for="mail">Gebruikersnaam of e-mailadres</label><input id="mail" autocomplete="username" autocapitalize="none" required><label for="password">Wachtwoord</label><input id="password" type="password" autocomplete="current-password" required><button class="button" style="width:100%">Inloggen</button></form>
 <p><button class="tab" id="toSignup" type="button">Nog geen wachtwoord? Account aanmaken</button></p><p id="loginError" class="result" hidden></p></main></div>
 
 <div class="gate" id="pairGate" hidden><main><p class="eyebrow">MINOR POCKET · ADMIN</p><h1>Tablet koppelen</h1><p>Dit apparaat is nog niet gekoppeld als admin-tablet. Vul een koppelcode in. Die maak je op een al gekoppelde tablet (onderdeel Apparaten). Voor de allereerste tablet maak je de code in de Supabase SQL-editor met <code>select public.admin_bootstrap_code();</code></p>
@@ -63,7 +63,9 @@ $('#toSignup').onclick = () => {
 };
 $('#loginForm').onsubmit = async (e) => {
   e.preventDefault();
-  const credentials = { email: $('#mail').value.trim().toLowerCase(), password: $('#password').value };
+  // Een gebruikersnaam zonder @ hoort bij een admin-account op @minorpocket.nl.
+  const login = $('#mail').value.trim().toLowerCase();
+  const credentials = { email: login.includes('@') ? login : login + '@minorpocket.nl', password: $('#password').value };
   const { data, error } = signup ? await supabase.auth.signUp(credentials) : await supabase.auth.signInWithPassword(credentials);
   if (error) return show($('#loginError'), message(error));
   if (!data.session) return show($('#loginError'), 'Bevestig eerst je account via de e-mail die je net hebt gekregen.');
